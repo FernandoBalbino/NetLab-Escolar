@@ -62,7 +62,7 @@ Para substituí-las, mantenha os mesmos nomes de arquivo e prefira imagens PNG c
 
 ## Conectividade e status
 
-A lógica fica em `js/connections.js`. A função `connectionRule` permite Internet ↔ Roteador, Roteador ↔ Switch, Roteador ↔ PC, Switch ↔ PC e Switch ↔ Switch. Internet ↔ PC, Internet ↔ Switch, PC ↔ PC e outras combinações são bloqueadas com uma mensagem educativa.
+A lógica fica em `js/connections.js`. A função `connectionRule` permite Internet ↔ Roteador, Roteador ↔ Switch, Roteador ↔ PC, Switch ↔ PC e Switch ↔ Switch. Conexões PC ↔ PC são permitidas nos desafios Anel e Malha e no Modo livre, mas continuam bloqueadas em Estrela, Barramento e Árvore. Internet ↔ PC, Internet ↔ Switch e outras combinações incompatíveis são bloqueadas com uma mensagem educativa.
 
 A função `recalculateStatuses` monta o grafo da rede, encontra os roteadores ligados diretamente à Internet e executa uma busca em largura a partir deles. O resultado é recalculado depois de qualquer alteração:
 

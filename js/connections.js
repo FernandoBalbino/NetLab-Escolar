@@ -13,18 +13,28 @@
     return "Instale uma placa de rede no " + node.name + " antes de conectar um cabo.";
   }
 
-  function connectionRule(source, target) {
+  function allowsDirectPcConnection(challenge) {
+    return ["ring", "mesh", "free"].indexOf(challenge) >= 0;
+  }
+
+  function activeChallenge() {
+    return NetLab.State && NetLab.State.data ? NetLab.State.data.challenge : "free";
+  }
+
+  function connectionRule(source, target, challenge) {
     if (!source || !target) return { allowed: false, message: "Escolha dois equipamentos válidos." };
     var pair = [source.type, target.type].sort().join("|");
-    var allowed = ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0;
+    var topology = typeof challenge === "string" ? challenge : activeChallenge();
+    var allowed = ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
+      || (pair === "pc|pc" && allowsDirectPcConnection(topology));
     if (allowed) return { allowed: true, message: "" };
     if (source.type === "internet" || target.type === "internet") return { allowed: false, message: "A Internet só pode ser ligada a um Roteador." };
-    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "PCs devem ser conectados a um Switch ou Roteador." };
+    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "Conexões diretas entre PCs são permitidas apenas em Anel, Malha ou Modo livre." };
     if (source.type === "router" && target.type === "router") return { allowed: false, message: "Conecte cada Roteador à Internet, a um Switch ou a um PC." };
     return { allowed: false, message: "Essa combinação de equipamentos não aceita conexão direta." };
   }
 
-  function isPairAllowed(source, target) { return connectionRule(source, target).allowed; }
+  function isPairAllowed(source, target, challenge) { return connectionRule(source, target, challenge).allowed; }
 
   function add(sourceId, targetId) {
     var source = NetLab.State.getNode(sourceId);
@@ -203,6 +213,7 @@
     add: add,
     attachToBus: attachToBus,
     canConnectNode: canConnectNode,
+    allowsDirectPcConnection: allowsDirectPcConnection,
     connectionRule: connectionRule,
     isPairAllowed: isPairAllowed,
     nodeCenter: nodeCenter,

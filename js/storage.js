@@ -19,9 +19,10 @@
 
   function finite(value, fallback) { return Number.isFinite(Number(value)) ? Number(value) : fallback; }
 
-  function pairAllowed(source, target) {
+  function pairAllowed(source, target, challenge) {
     var pair = [source.type, target.type].sort().join("|");
-    return ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0;
+    return ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
+      || (pair === "pc|pc" && ["ring", "mesh", "free"].indexOf(challenge) >= 0);
   }
 
   function sanitizeProject(project, options) {
@@ -33,6 +34,7 @@
     if (project.nodes.length > 500 || project.connections.length > 2000 || project.buses.length > 50) {
       throw new Error("O projeto excede o limite seguro de elementos.");
     }
+    var challenge = NetLab.State.challengeIds.indexOf(project.challenge) >= 0 ? project.challenge : "free";
 
     var legacyConnectedIds = new Set();
     project.connections.forEach(function (connection) {
@@ -109,9 +111,9 @@
     });
 
     var nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
-    var invalidConnection = connections.find(function (connection) { return !pairAllowed(nodeById.get(connection.sourceId), nodeById.get(connection.targetId)); });
+    var invalidConnection = connections.find(function (connection) { return !pairAllowed(nodeById.get(connection.sourceId), nodeById.get(connection.targetId), challenge); });
     if (invalidConnection && strictConnections) throw new Error("O arquivo contém uma conexão entre tipos de equipamentos incompatíveis.");
-    connections = connections.filter(function (connection) { return pairAllowed(nodeById.get(connection.sourceId), nodeById.get(connection.targetId)); });
+    connections = connections.filter(function (connection) { return pairAllowed(nodeById.get(connection.sourceId), nodeById.get(connection.targetId), challenge); });
     connections.forEach(function (connection) {
       var source = nodeById.get(connection.sourceId);
       var target = nodeById.get(connection.targetId);
@@ -133,7 +135,7 @@
       nodes: nodes,
       connections: connections,
       buses: buses,
-      challenge: NetLab.State.challengeIds.indexOf(project.challenge) >= 0 ? project.challenge : "free",
+      challenge: challenge,
       hintsUsed: Math.max(0, Math.min(5, finite(project.hintsUsed, 0))),
       zoom: NetLab.State.clamp(finite(project.zoom, 1), .4, 2),
       pan: {
