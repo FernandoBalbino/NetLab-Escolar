@@ -1,0 +1,77 @@
+@media (max-width: 1120px) {
+  :root { --sidebar-width: 270px; }
+  .brand-copy span { display: none; }
+  .floating-toolbar { max-width: calc(100vw - var(--sidebar-width) - 20px); }
+  .tool-button { width: 34px; height: 34px; }
+}
+
+@media (max-width: 760px) {
+  :root { --sidebar-width: 100%; }
+  .app-shell, .app-shell.is-sidebar-collapsed { display: block; }
+  .brand-bar { top: 8px; left: 8px; }
+  .brand-copy span { display: none; }
+  .panel-toggle { display: grid; }
+  .brand-mark { width: 36px; height: 36px; }
+
+  .floating-toolbar, .app-shell.is-sidebar-collapsed .floating-toolbar {
+    top: 58px;
+    right: auto;
+    left: 8px !important;
+    width: calc(100vw - 16px);
+    max-width: none;
+    min-height: 50px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    transform: none;
+    justify-content: flex-start;
+  }
+  .tool-button { width: 40px; height: 40px; }
+  [data-tooltip]::after { display: none; }
+
+  .sidebar {
+    position: fixed;
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    z-index: 70;
+    width: auto;
+    height: min(62vh, 520px);
+    padding-top: 0;
+    background: rgba(255, 255, 255, .98);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(23, 32, 51, .25);
+    transform: translateY(0);
+  }
+  .sidebar::before { display: block; width: 42px; height: 4px; margin: 8px auto 0; background: var(--line-strong); border-radius: 999px; content: ""; }
+  .is-sidebar-collapsed .sidebar { opacity: 0; transform: translateY(calc(100% + 16px)); }
+  .sidebar-scroll { padding-top: 4px; }
+  .workspace-shell, .is-sidebar-collapsed .workspace-shell { position: absolute; inset: 0; height: 100%; }
+  .interaction-hint { top: 116px; }
+  .network-tip { top: 116px; }
+  .interaction-hint.is-visible + .network-tip { top: 154px; }
+  .workspace-status { bottom: 8px; flex-wrap: wrap; max-width: calc(100% - 24px); }
+  .workspace-status span:nth-child(2), .workspace-status span:nth-child(3) { display: none; }
+  .feedback { right: 10px; bottom: 50px; width: calc(100vw - 20px); }
+  .tutorial-modal { grid-template-columns: 1fr; max-height: calc(100vh - 28px); overflow-y: auto; }
+  .tutorial-visual { min-height: 170px; padding: 20px; }
+  .tutorial-visual img { max-height: 110px; }
+  .tutorial-content { padding: 24px; }
+  .tutorial-content h2 { font-size: 20px; }
+  .tutorial-content p { min-height: auto; }
+}
+
+@media (max-width: 420px) {
+  .brand-copy { display: none; }
+  .tutorial-actions { flex-direction: column-reverse; }
+  .tutorial-actions button { width: 100%; }
+  .project-button-grid { grid-template-columns: 1fr; }
+  .project-button-grid button:first-child { grid-column: auto; }
+}
+
+@media (pointer: coarse) {
+  .add-button, .primary-button, .secondary-button, .danger-button { min-height: 42px; }
+  .network-node { touch-action: none; }
+  .bus-resizer { width: 26px; height: 28px; top: 10px; }
+}

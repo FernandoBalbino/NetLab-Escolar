@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Simulador educativo de topologias de redes para estudantes do ensino médio.">
+  <meta name="theme-color" content="#f7f9fc">
+  <title>NetLab Escolar</title>
+  <link rel="icon" type="image/png" href="./assets/images/pc.png">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/workspace.css">
+  <link rel="stylesheet" href="./css/responsive.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Ir para a área de trabalho</a>
+
+  <svg class="icon-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M5 3l13 8-6 2-3 6z"/><path d="M12 13l5 6"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 12V7a2 2 0 0 1 4 0v4-6a2 2 0 0 1 4 0v6-4a2 2 0 0 1 4 0v8c0 4-3 6-7 6h-1c-3 0-5-2-7-5l-1-2a2 2 0 0 1 4-2z"/></symbol>
+    <symbol id="i-pc" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-switch" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M6 11h2m2 0h2m2 0h2m2 0h1M6 14h2m2 0h2"/></symbol>
+    <symbol id="i-cable" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6h3a4 4 0 0 1 4 4v4a4 4 0 0 0 4 4"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><path d="M3 12h18M6 8v8m6-8v8m6-8v8"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 7l-5 5 5 5M5 12h8a6 6 0 0 1 6 6"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 7l5 5-5 5m4-5h-8a6 6 0 0 0-6 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M11 8v6m-3-3h6m2 5 5 5"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11h6m2 5 5 5"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5M8 8h8v8H8z"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><path d="M4 15l8-10 8 10-5 5H9zM3 21h18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="i-packet" viewBox="0 0 24 24"><path d="M4 7l8-4 8 4-8 4zM4 7v10l8 4 8-4V7M12 11v10"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  </svg>
+
+  <div id="app" class="app-shell">
+    <header class="brand-bar" aria-label="Cabeçalho">
+      <button id="sidebar-toggle" class="icon-button panel-toggle" type="button" aria-label="Recolher painel lateral" data-tooltip="Recolher painel">
+        <svg aria-hidden="true"><use href="#i-menu"></use></svg>
+      </button>
+      <div class="brand-mark" aria-hidden="true">NL</div>
+      <div class="brand-copy">
+        <strong>NetLab Escolar</strong>
+        <span>Laboratório de redes</span>
+      </div>
+    </header>
+
+    <nav id="toolbar" class="floating-toolbar" aria-label="Ferramentas da rede">
+      <div class="tool-group" role="group" aria-label="Ferramentas de edição">
+        <button class="tool-button is-active" type="button" data-tool="select" aria-label="Selecionar (V)" data-tooltip="Selecionar · V"><svg aria-hidden="true"><use href="#i-pointer"></use></svg></button>
+        <button class="tool-button" type="button" data-tool="pan" aria-label="Mover espaço de trabalho (H ou espaço)" data-tooltip="Mover o espaço · H"><svg aria-hidden="true"><use href="#i-hand"></use></svg></button>
+        <button class="tool-button" type="button" data-tool="add-internet" aria-label="Adicionar Internet (I)" data-tooltip="Adicionar Internet · I"><img class="tool-image-icon" src="./assets/images/internet.png" alt=""></button>
+        <button class="tool-button" type="button" data-tool="add-router" aria-label="Adicionar roteador (R)" data-tooltip="Adicionar roteador · R"><img class="tool-image-icon tool-image-icon--wide" src="./assets/images/roteador.png" alt=""></button>
+        <button class="tool-button" type="button" data-tool="add-switch" aria-label="Adicionar switch (S)" data-tooltip="Adicionar switch · S"><svg aria-hidden="true"><use href="#i-switch"></use></svg></button>
+        <button class="tool-button" type="button" data-tool="add-pc" aria-label="Adicionar computador (P)" data-tooltip="Adicionar computador · P"><svg aria-hidden="true"><use href="#i-pc"></use></svg></button>
+        <button class="tool-button" type="button" data-tool="cable" aria-label="Adicionar cabo (C)" data-tooltip="Conectar com cabo · C"><svg aria-hidden="true"><use href="#i-cable"></use></svg></button>
+        <button class="tool-button" type="button" data-tool="add-bus" aria-label="Adicionar barramento (B)" data-tooltip="Adicionar barramento · B"><svg aria-hidden="true"><use href="#i-bus"></use></svg></button>
+      </div>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <div class="tool-group" role="group" aria-label="Histórico e exclusão">
+        <button class="tool-button" type="button" data-action="delete" aria-label="Excluir selecionado" data-tooltip="Excluir · Del"><svg aria-hidden="true"><use href="#i-trash"></use></svg></button>
+        <button class="tool-button" type="button" data-action="undo" aria-label="Desfazer" data-tooltip="Desfazer · Ctrl+Z"><svg aria-hidden="true"><use href="#i-undo"></use></svg></button>
+        <button class="tool-button" type="button" data-action="redo" aria-label="Refazer" data-tooltip="Refazer · Ctrl+Y"><svg aria-hidden="true"><use href="#i-redo"></use></svg></button>
+      </div>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <div class="tool-group" role="group" aria-label="Visualização">
+        <button class="tool-button" type="button" data-action="zoom-in" aria-label="Aproximar" data-tooltip="Aproximar · +"><svg aria-hidden="true"><use href="#i-plus"></use></svg></button>
+        <button class="tool-button" type="button" data-action="zoom-out" aria-label="Afastar" data-tooltip="Afastar · −"><svg aria-hidden="true"><use href="#i-minus"></use></svg></button>
+        <button class="tool-button" type="button" data-action="fit" aria-label="Ajustar à tela" data-tooltip="Ajustar · 0"><svg aria-hidden="true"><use href="#i-fit"></use></svg></button>
+      </div>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <div class="tool-group" role="group" aria-label="Testes da rede">
+        <button class="tool-button" type="button" data-action="clear" aria-label="Limpar projeto" data-tooltip="Limpar projeto"><svg aria-hidden="true"><use href="#i-clear"></use></svg></button>
+        <button class="tool-button tool-button--success" type="button" data-action="verify" aria-label="Verificar topologia" data-tooltip="Verificar topologia"><svg aria-hidden="true"><use href="#i-check"></use></svg></button>
+        <button class="tool-button tool-button--packet" type="button" data-action="communicate" aria-label="Testar comunicação" data-tooltip="Testar comunicação"><svg aria-hidden="true"><use href="#i-packet"></use></svg></button>
+      </div>
+    </nav>
+    <aside id="sidebar" class="sidebar" aria-label="Equipamentos e desafios">
+      <div class="sidebar-scroll">
+        <section class="side-section project-actions" aria-labelledby="project-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">Arquivo</span><h2 id="project-title">Projeto</h2></div>
+          </div>
+          <div class="project-button-grid">
+            <button id="new-project" class="secondary-button" type="button" aria-label="Criar novo projeto">Novo projeto</button>
+            <button id="export-project" class="secondary-button" type="button" aria-label="Exportar projeto">Exportar</button>
+            <button id="import-project" class="secondary-button" type="button" aria-label="Importar projeto">Importar</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </section>
+
+        <section class="side-section" aria-labelledby="equipment-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">Biblioteca</span><h2 id="equipment-title">Equipamentos</h2></div>
+          </div>
+          <div class="device-library">
+            <article class="device-card">
+              <img src="./assets/images/internet.png" alt="Globo representando a Internet">
+              <div><strong>Internet</strong><span>Fonte da conexão</span></div>
+              <button class="add-button" type="button" data-add="internet" aria-label="Adicionar Internet">Adicionar</button>
+            </article>
+            <article class="device-card">
+              <img src="./assets/images/roteador.png" alt="Roteador sem fio">
+              <div><strong>Roteador</strong><span>Distribui a internet</span></div>
+              <button class="add-button" type="button" data-add="router" aria-label="Adicionar roteador">Adicionar</button>
+            </article>
+            <article class="device-card">
+              <img src="./assets/images/switch.png" alt="Switch de rede">
+              <div><strong>Switch</strong><span>Conecta equipamentos</span></div>
+              <button class="add-button" type="button" data-add="switch" aria-label="Adicionar switch">Adicionar</button>
+            </article>
+            <article class="device-card">
+              <img src="./assets/images/pc.png" alt="Computador de mesa">
+              <div><strong>Computador</strong><span>Estação da rede</span></div>
+              <button class="add-button" type="button" data-add="pc" aria-label="Adicionar computador">Adicionar</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="side-section" aria-labelledby="challenge-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">Aprender</span><h2 id="challenge-title">Topologias</h2></div>
+            <span id="challenge-count" class="count-badge">0/5</span>
+          </div>
+          <div id="challenge-list" class="challenge-list"></div>
+        </section>
+
+        <section id="active-challenge" class="side-section active-challenge" aria-labelledby="active-challenge-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">Desafio atual</span><h2 id="active-challenge-title">Modo livre</h2></div>
+            <span id="score-badge" class="score-badge">—</span>
+          </div>
+          <p id="active-challenge-description">Monte qualquer rede e use a verificação para identificar a topologia.</p>
+          <div class="challenge-actions">
+            <button id="ask-hint" class="secondary-button" type="button" aria-label="Pedir dica do desafio">Pedir dica</button>
+            <button id="restart-challenge" class="secondary-button" type="button" aria-label="Reiniciar desafio">Reiniciar</button>
+            <button id="verify-challenge" class="primary-button" type="button" aria-label="Verificar desafio atual">Verificar</button>
+          </div>
+        </section>
+
+        <section class="side-section" aria-labelledby="progress-title">
+          <div class="section-heading">
+            <div><span class="eyebrow">Seu avanço</span><h2 id="progress-title">Progresso</h2></div>
+          </div>
+          <div id="progress-list" class="progress-list"></div>
+        </section>
+
+        <section id="inspector" class="side-section inspector" aria-labelledby="inspector-title" hidden>
+          <div class="section-heading">
+            <div><span class="eyebrow">Selecionado</span><h2 id="inspector-title">Propriedades</h2></div>
+          </div>
+          <label id="rename-label" for="rename-input">Nome do equipamento</label>
+          <div class="rename-row">
+            <input id="rename-input" maxlength="32" autocomplete="off">
+            <button id="rename-save" class="primary-button" type="button" aria-label="Salvar nome do equipamento">Salvar</button>
+          </div>
+          <button id="inspector-delete" class="danger-button" type="button" aria-label="Excluir item selecionado">Excluir selecionado</button>
+        </section>
+      </div>
+    </aside>
+
+    <main class="workspace-shell">
+      <div id="workspace" class="workspace" tabindex="0" aria-label="Área de trabalho da rede">
+        <div id="world" class="world" aria-live="off">
+          <svg id="connection-layer" class="connection-layer" viewBox="0 0 2400 1400" aria-label="Cabos da rede">
+            <g id="connection-group"></g>
+            <path id="cable-preview" class="cable-preview" d="" hidden></path>
+            <circle id="packet" class="packet" r="8" cx="0" cy="0" hidden></circle>
+          </svg>
+          <div id="bus-layer" class="bus-layer"></div>
+          <div id="node-layer" class="node-layer"></div>
+        </div>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-icon" aria-hidden="true"><svg><use href="#i-pc"></use></svg></div>
+          <strong>Comece sua primeira rede</strong>
+          <span>Adicione Internet, Roteador, Switch e computadores.</span>
+        </div>
+        <div id="interaction-hint" class="interaction-hint" aria-live="polite">Ferramenta Selecionar ativa</div>
+        <div id="network-tip" class="network-tip" role="status" aria-live="polite" hidden>Conecte a Internet ao Roteador para ativar a rede.</div>
+      </div>
+      <footer class="workspace-status" aria-label="Estado da área de trabalho">
+        <span id="status-tool"><b>Selecionar</b></span>
+        <span id="status-selection">Nenhum item selecionado</span>
+        <span id="status-challenge">Modo livre</span>
+        <span id="status-zoom">100%</span>
+      </footer>
+    </main>
+  </div>
+
+  <section id="feedback" class="feedback" role="status" aria-live="polite" hidden>
+    <div id="feedback-icon" class="feedback-icon" aria-hidden="true"></div>
+    <div><strong id="feedback-title"></strong><p id="feedback-message"></p></div>
+    <button id="feedback-close" class="icon-button" type="button" aria-label="Fechar mensagem">×</button>
+  </section>
+
+  <div id="tutorial-modal" class="modal-backdrop" hidden>
+    <section class="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+      <div class="tutorial-visual">
+        <div id="tutorial-number" class="tutorial-number">1</div>
+        <img id="tutorial-image" src="./assets/images/pc.png" alt="">
+      </div>
+      <div class="tutorial-content">
+        <span id="tutorial-progress" class="eyebrow">Etapa 1 de 4</span>
+        <h2 id="tutorial-title">Adicione equipamentos</h2>
+        <p id="tutorial-text"></p>
+        <label class="check-row"><input id="tutorial-hide" type="checkbox"> Não mostrar novamente</label>
+        <div class="tutorial-actions">
+          <button id="tutorial-skip" class="secondary-button" type="button" aria-label="Pular tutorial">Pular tutorial</button>
+          <button id="tutorial-next" class="primary-button" type="button" aria-label="Avançar tutorial">Próxima</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script defer src="./js/state.js"></script>
+  <script defer src="./js/history.js"></script>
+  <script defer src="./js/storage.js"></script>
+  <script defer src="./js/devices.js"></script>
+  <script defer src="./js/connections.js"></script>
+  <script defer src="./js/topology-validator.js"></script>
+  <script defer src="./js/challenges.js"></script>
+  <script defer src="./js/communication-test.js"></script>
+  <script defer src="./js/tutorial.js"></script>
+  <script defer src="./js/workspace.js"></script>
+  <script defer src="./js/app.js"></script>
+</body>
+</html>
