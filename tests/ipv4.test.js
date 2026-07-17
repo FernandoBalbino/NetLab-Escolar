@@ -99,3 +99,30 @@ test("mantém compatibilidade com projetos sem IPv4", () => {
   const sanitized = global.NetLab.Storage.sanitizeProject(projectWith(undefined));
   assert.deepEqual(sanitized.nodes[0].ipv4, IPv4.defaultConfiguration());
 });
+
+function projectWithDirectPcConnection(challenge) {
+  return {
+    nodes: [
+      { id: "pc-1", type: "pc", name: "PC-1", x: 20, y: 20, width: 142, height: 158, status: "no-internet", hasNetworkCard: true },
+      { id: "pc-2", type: "pc", name: "PC-2", x: 220, y: 20, width: 142, height: 158, status: "no-internet", hasNetworkCard: true }
+    ],
+    connections: [{ id: "connection-1", sourceId: "pc-1", targetId: "pc-2", type: "ethernet" }],
+    buses: [],
+    challenge,
+    hintsUsed: 0,
+    zoom: 1,
+    pan: { x: 0, y: 0 }
+  };
+}
+
+test("preserva cabo direto entre PCs em projetos de Anel", () => {
+  const sanitized = global.NetLab.Storage.sanitizeProject(projectWithDirectPcConnection("ring"));
+  assert.equal(sanitized.connections.length, 1);
+});
+
+test("rejeita cabo direto entre PCs em projetos de Estrela", () => {
+  assert.throws(
+    () => global.NetLab.Storage.sanitizeProject(projectWithDirectPcConnection("star")),
+    /conexão entre tipos de equipamentos incompatíveis/
+  );
+});

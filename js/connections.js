@@ -13,18 +13,24 @@
     return "Instale uma placa de rede no " + node.name + " antes de conectar um cabo.";
   }
 
-  function connectionRule(source, target) {
+  function allowsDirectPcConnection(challengeId) {
+    return ["free", "ring", "mesh"].indexOf(challengeId) >= 0;
+  }
+
+  function connectionRule(source, target, challengeId) {
     if (!source || !target) return { allowed: false, message: "Escolha dois equipamentos válidos." };
     var pair = [source.type, target.type].sort().join("|");
-    var allowed = ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0;
+    var challenge = challengeId || (NetLab.State && NetLab.State.data ? NetLab.State.data.challenge : "free");
+    var allowed = ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
+      || (pair === "pc|pc" && allowsDirectPcConnection(challenge));
     if (allowed) return { allowed: true, message: "" };
     if (source.type === "internet" || target.type === "internet") return { allowed: false, message: "A Internet só pode ser ligada a um Roteador." };
-    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "PCs devem ser conectados a um Switch ou Roteador." };
+    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "A ligação direta entre computadores é usada nas topologias Anel e Malha." };
     if (source.type === "router" && target.type === "router") return { allowed: false, message: "Conecte cada Roteador à Internet, a um Switch ou a um PC." };
     return { allowed: false, message: "Essa combinação de equipamentos não aceita conexão direta." };
   }
 
-  function isPairAllowed(source, target) { return connectionRule(source, target).allowed; }
+  function isPairAllowed(source, target, challengeId) { return connectionRule(source, target, challengeId).allowed; }
 
   function add(sourceId, targetId) {
     var source = NetLab.State.getNode(sourceId);
@@ -204,6 +210,7 @@
     attachToBus: attachToBus,
     canConnectNode: canConnectNode,
     connectionRule: connectionRule,
+    allowsDirectPcConnection: allowsDirectPcConnection,
     isPairAllowed: isPairAllowed,
     nodeCenter: nodeCenter,
     busPoint: busPoint,

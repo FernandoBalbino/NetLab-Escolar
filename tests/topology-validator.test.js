@@ -68,4 +68,22 @@ context.window.NetLab.State.data.connections = completeConnections;
 context.window.NetLab.Connections.recalculateStatuses();
 assert.equal(context.window.NetLab.State.data.nodes.every(function (item) { return item.status === "connected"; }), true, "a infraestrutura completa deve propagar o status Conectado");
 
+var ringNodes = [node("ring-pc1", "pc"), node("ring-pc2", "pc"), node("ring-pc3", "pc"), node("ring-pc4", "pc")];
+var ringConnections = [
+  connection("ring-pc1", "ring-pc2"),
+  connection("ring-pc2", "ring-pc3"),
+  connection("ring-pc3", "ring-pc4"),
+  connection("ring-pc4", "ring-pc1")
+];
+assert.equal(context.window.NetLab.TopologyValidator.validate("ring", snapshot(ringNodes, ringConnections)).valid, true, "anel formado por PCs deve ser válido");
+
+var meshNodes = [node("mesh-pc1", "pc"), node("mesh-pc2", "pc"), node("mesh-pc3", "pc"), node("mesh-pc4", "pc")];
+var meshConnections = [];
+for (var meshSource = 0; meshSource < meshNodes.length; meshSource += 1) {
+  for (var meshTarget = meshSource + 1; meshTarget < meshNodes.length; meshTarget += 1) {
+    meshConnections.push(connection(meshNodes[meshSource].id, meshNodes[meshTarget].id));
+  }
+}
+assert.equal(context.window.NetLab.TopologyValidator.validate("mesh", snapshot(meshNodes, meshConnections)).valid, true, "malha completa formada por PCs deve ser válida");
+
 console.log("STAR_VALIDATOR_OK");
