@@ -67,7 +67,8 @@
         width: width,
         height: height,
         status: ["disconnected", "no-internet", "connected"].indexOf(node.status) >= 0 ? node.status : "disconnected",
-        hasNetworkCard: hasNetworkCard
+        hasNetworkCard: hasNetworkCard,
+        ipv4: node.type === "pc" ? NetLab.IPv4.sanitize(node.ipv4) : undefined
       };
     });
 

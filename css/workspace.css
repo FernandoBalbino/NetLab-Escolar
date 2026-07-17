@@ -25,9 +25,8 @@
   height: 1400px;
   background: rgba(255, 255, 255, .38);
   border: 1px solid rgba(176, 186, 202, .42);
-  transform: translate(0, 0) scale(1);
+  transform: translate(0, 0);
   transform-origin: 0 0;
-  will-change: transform;
 }
 
 .connection-layer, .bus-layer, .node-layer { position: absolute; inset: 0; width: 2400px; height: 1400px; }
@@ -55,8 +54,10 @@
 .connection-path:hover, .attachment-path:hover { stroke: var(--blue-500); }
 .connection-path.is-selected, .attachment-path.is-selected { stroke: var(--blue-600); stroke-width: 6; filter: drop-shadow(0 0 5px rgba(37, 99, 235, .4)); }
 .connection-path.is-route, .attachment-path.is-route { stroke: var(--blue-500); stroke-width: 7; filter: drop-shadow(0 0 6px rgba(37, 99, 235, .55)); }
+.connection-path.is-route-error, .attachment-path.is-route-error { stroke: #dc2626; stroke-width: 7; filter: drop-shadow(0 0 6px rgba(220, 38, 38, .55)); }
 .cable-preview { fill: none; stroke: var(--blue-500); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 7; pointer-events: none; animation: dash 700ms linear infinite; }
 .packet { fill: var(--blue-600); stroke: white; stroke-width: 3; filter: drop-shadow(0 3px 5px rgba(37, 99, 235, .45)); pointer-events: none; }
+.packet.is-error { fill: #dc2626; filter: drop-shadow(0 3px 6px rgba(220, 38, 38, .55)); }
 
 .network-node {
   position: absolute;
@@ -83,7 +84,7 @@
 .network-node.is-selected { border-color: var(--blue-600); box-shadow: 0 0 0 4px rgba(37, 99, 235, .13), 0 10px 24px rgba(35, 47, 68, .16); }
 .network-node.is-cable-source { border-color: var(--blue-500); box-shadow: 0 0 0 7px rgba(37, 99, 235, .12); animation: source-pulse 900ms ease-in-out infinite alternate; }
 .network-node.is-communication-source { border-color: #7c3aed; box-shadow: 0 0 0 6px rgba(124, 58, 237, .12); }
-.node-image { display: block; flex: 0 0 auto; width: 92px; height: 60px; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.node-image { display: block; flex: 0 0 auto; width: 92px; height: 60px; object-fit: contain; image-rendering: auto; pointer-events: none; -webkit-user-drag: none; }
 .network-node[data-type="switch"] .node-image { width: 122px; height: 54px; margin-top: 1px; }
 .network-node[data-type="router"] .node-image { width: 142px; height: 82px; }
 .network-node[data-type="internet"] .node-image { width: 64px; height: 64px; }
@@ -104,10 +105,18 @@
 .port--bottom { bottom: -5px; left: calc(50% - 4px); }
 .port--left { top: calc(50% - 4px); left: -5px; }
 
-.network-card-slot {
+.pc-control-row {
   position: absolute;
   bottom: 7px;
   left: 50%;
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+.network-card-slot, .pc-settings-slot {
+  position: relative;
   display: grid;
   place-items: center;
   width: 34px;
@@ -115,18 +124,20 @@
   padding: 3px;
   color: var(--blue-600);
   background: #f8fbff;
-  border: 2px dashed #8eb2f6;
   border-radius: 7px;
   box-shadow: 0 2px 6px rgba(37, 99, 235, .1);
   cursor: pointer;
   pointer-events: auto;
-  transform: translateX(-50%);
   transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
-.network-card-slot:hover, .network-card-slot:focus-visible { background: var(--blue-50); border-color: var(--blue-600); box-shadow: 0 0 0 3px rgba(37, 99, 235, .13); outline: none; transform: translateX(-50%) scale(1.05); }
+.network-card-slot { border: 2px dashed #8eb2f6; }
+.network-card-slot:hover, .network-card-slot:focus-visible, .pc-settings-slot:hover, .pc-settings-slot:focus-visible { background: var(--blue-50); border-color: var(--blue-600); box-shadow: 0 0 0 3px rgba(37, 99, 235, .13); outline: none; transform: scale(1.05); }
 .network-card-slot.is-installed { background: #ecfdf3; border-style: solid; border-color: #4fbd82; }
 .network-card-plus { font-size: 22px; font-weight: 500; line-height: 1; }
 .network-card-thumbnail { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.pc-settings-slot { color: var(--blue-600); background: #f8fbff; border: 2px solid #a9c3f6; }
+.pc-settings-slot.is-configured { color: #23734a; background: #ecfdf3; border-color: #4fbd82; }
+.pc-settings-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 
 .network-card-popover {
   position: absolute;
@@ -156,6 +167,42 @@
 .network-card-install:hover { background: var(--blue-700); }
 .network-card-install:disabled { color: #23734a; background: #e5f7ed; cursor: default; }
 
+.ipv4-popover {
+  position: absolute;
+  top: 4px;
+  left: calc(100% + 12px);
+  z-index: 21;
+  width: 282px;
+  padding: 14px;
+  color: var(--ink-700);
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  box-shadow: 0 18px 42px rgba(23, 32, 51, .22);
+  cursor: default;
+  pointer-events: auto;
+  animation: popover-in 160ms ease both;
+}
+.ipv4-popover::before { position: absolute; top: 112px; left: -7px; width: 12px; height: 12px; background: #fff; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); content: ""; transform: rotate(45deg); }
+.ipv4-popover__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.ipv4-popover__heading-copy { display: flex; flex-direction: column; min-width: 0; }
+.ipv4-popover__eyebrow { color: var(--ink-500); font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.ipv4-popover__title { margin-top: 2px; color: var(--ink-900); font-size: 14px; line-height: 1.25; }
+.ipv4-popover__mode { flex: 0 0 auto; padding: 4px 8px; color: var(--blue-700); background: var(--blue-50); border-radius: 999px; font-size: 9px; font-weight: 800; }
+.ipv4-popover__label { display: block; margin: 9px 0 5px; color: var(--ink-700); font-size: 10px; font-weight: 800; }
+.ipv4-popover__optional { color: var(--ink-500); font-size: 9px; font-weight: 600; }
+.ipv4-popover__input { width: 100%; height: 36px; padding: 8px 10px; color: var(--ink-900); background: #fff; border: 1px solid var(--line-strong); border-radius: 9px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.ipv4-popover__input:focus { border-color: var(--blue-500); outline: 3px solid rgba(37, 99, 235, .12); }
+.ipv4-popover__input[aria-invalid="true"] { border-color: var(--danger); outline-color: rgba(220, 38, 38, .12); }
+.ipv4-popover__error { margin: 8px 0 0; color: var(--danger); font-size: 10px; font-weight: 700; line-height: 1.4; }
+.ipv4-popover__actions { display: grid; grid-template-columns: auto 1fr; gap: 7px; margin-top: 11px; }
+.ipv4-popover__clear, .ipv4-popover__save { min-height: 36px; padding: 8px 12px; border-radius: 9px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.ipv4-popover__clear { color: var(--ink-700); background: #fff; border: 1px solid var(--line-strong); }
+.ipv4-popover__clear:hover { color: var(--blue-700); background: var(--blue-50); border-color: var(--blue-100); }
+.ipv4-popover__save { color: #fff; background: var(--blue-600); border: 1px solid var(--blue-600); }
+.ipv4-popover__save:hover { background: var(--blue-700); }
+
 .bus-element {
   position: absolute;
   height: 48px;
@@ -168,6 +215,7 @@
 .bus-line { position: absolute; top: 21px; right: 0; left: 0; height: 6px; background: #566783; border: 1px solid #354660; border-radius: 999px; box-shadow: 0 3px 7px rgba(35, 47, 68, .2); }
 .bus-element.is-selected .bus-line { background: var(--blue-600); box-shadow: 0 0 0 5px rgba(37, 99, 235, .13), 0 3px 9px rgba(35, 47, 68, .24); }
 .bus-element.is-route .bus-line { background: var(--blue-500); box-shadow: 0 0 0 6px rgba(37, 99, 235, .15), 0 3px 9px rgba(35, 47, 68, .24); }
+.bus-element.is-route-error .bus-line { background: #dc2626; box-shadow: 0 0 0 6px rgba(220, 38, 38, .15), 0 3px 9px rgba(35, 47, 68, .24); }
 .bus-label { position: absolute; top: -10px; left: 50%; padding: 3px 7px; color: var(--ink-700); background: #fff; border: 1px solid var(--line); border-radius: 999px; font-size: 9px; font-weight: 800; transform: translateX(-50%); white-space: nowrap; }
 .bus-anchor { position: absolute; top: 18px; width: 12px; height: 12px; background: white; border: 2px solid #60738f; border-radius: 50%; transform: translateX(-50%); transition: background 140ms ease, transform 140ms ease; }
 .workspace[data-tool="cable"] .bus-anchor { background: var(--blue-50); border-color: var(--blue-600); }
