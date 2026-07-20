@@ -250,9 +250,6 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   font-weight: 800;
 }
 
-.project-button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-.project-button-grid button:first-child { grid-column: span 2; }
-
 .primary-button, .secondary-button, .danger-button, .add-button {
   min-height: 36px;
   padding: 8px 12px;

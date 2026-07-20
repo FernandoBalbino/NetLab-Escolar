@@ -66,8 +66,6 @@
   .brand-copy { display: none; }
   .tutorial-actions { flex-direction: column-reverse; }
   .tutorial-actions button { width: 100%; }
-  .project-button-grid { grid-template-columns: 1fr; }
-  .project-button-grid button:first-child { grid-column: auto; }
 }
 
 @media (pointer: coarse) {

@@ -265,16 +265,6 @@
     feedback("info", "Área limpa", "O desafio atual e seu progresso foram preservados.");
   }
 
-  function newProject() {
-    if (hasElements() && !window.confirm("Criar um novo projeto removerá a rede atual. Seu progresso nos desafios será mantido. Continuar?")) return;
-    NetLab.Devices.clearCanvas(false);
-    NetLab.State.data.zoom = 1;
-    NetLab.State.data.pan = { x: 0, y: 0 };
-    NetLab.History.reset();
-    NetLab.State.emit("new-project");
-    feedback("info", "Novo projeto", "Você está no Modo livre com uma área vazia.");
-  }
-
   function handleAction(action) {
     if (action === "delete") {
       if (!NetLab.Devices.removeSelected()) feedback("warning", "Nada selecionado", "Selecione um equipamento, cabo ou barramento para excluir.");
@@ -367,20 +357,6 @@
     });
     document.getElementById("restart-challenge").addEventListener("click", restartChallenge);
     document.getElementById("verify-challenge").addEventListener("click", verifyTopology);
-    document.getElementById("new-project").addEventListener("click", newProject);
-    document.getElementById("export-project").addEventListener("click", function () { NetLab.Storage.exportProject(); feedback("success", "Projeto exportado", "O arquivo JSON foi gerado com sua rede e seu progresso."); });
-    document.getElementById("import-project").addEventListener("click", function () { document.getElementById("import-file").click(); });
-    document.getElementById("import-file").addEventListener("change", function (event) {
-      var input = event.currentTarget;
-      NetLab.Storage.readFile(input.files[0]).then(function (data) {
-        if (hasElements() && !window.confirm("Importar substituirá o projeto atual. Deseja continuar?")) return;
-        NetLab.State.restoreProject(data.project, "import");
-        NetLab.State.data.progress = data.progress;
-        NetLab.History.reset();
-        NetLab.Storage.saveNow();
-        feedback("success", "Projeto importado", "Equipamentos, conexões e progresso foram carregados.");
-      }).catch(function (error) { feedback("error", "Arquivo inválido", error.message); }).finally(function () { input.value = ""; });
-    });
     document.getElementById("rename-save").addEventListener("click", function () {
       var selected = NetLab.State.data.selected;
       if (selected && selected.kind === "node") NetLab.Devices.renameNode(selected.id, document.getElementById("rename-input").value);
