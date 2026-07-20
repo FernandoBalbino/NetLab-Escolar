@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "savedAt": "2026-07-17T00:00:00.000Z",
+  "project": {
+    "nodes": [
+      { "id": "ring-pc-1", "type": "pc", "name": "PC-1", "x": 170, "y": 210, "width": 142, "height": 158, "status": "disconnected", "hasNetworkCard": true, "ipv4": { "address": "", "mask": "255.255.255.0", "gateway": "" } },
+      { "id": "ring-pc-2", "type": "pc", "name": "PC-2", "x": 450, "y": 90, "width": 142, "height": 158, "status": "disconnected", "hasNetworkCard": true, "ipv4": { "address": "", "mask": "255.255.255.0", "gateway": "" } },
+      { "id": "ring-pc-3", "type": "pc", "name": "PC-3", "x": 730, "y": 210, "width": 142, "height": 158, "status": "disconnected", "hasNetworkCard": true, "ipv4": { "address": "", "mask": "255.255.255.0", "gateway": "" } },
+      { "id": "ring-pc-4", "type": "pc", "name": "PC-4", "x": 450, "y": 430, "width": 142, "height": 158, "status": "disconnected", "hasNetworkCard": true, "ipv4": { "address": "", "mask": "255.255.255.0", "gateway": "" } }
+    ],
+    "connections": [],
+    "buses": [],
+    "challenge": "ring",
+    "hintsUsed": 0,
+    "zoom": 1,
+    "pan": { "x": 0, "y": 0 }
+  },
+  "progress": {
+    "unlocked": ["star", "bus", "ring"],
+    "completed": { "star": true, "bus": true, "ring": false, "mesh": false, "tree": false },
+    "bestScores": { "star": 100, "bus": 100, "ring": 0, "mesh": 0, "tree": 0 }
+  }
+}

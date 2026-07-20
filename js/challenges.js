@@ -6,8 +6,8 @@
   var definitions = {
     star: { name: "Estrela", short: "Um switch no centro conecta os computadores da LAN.", objective: "Conecte três ou mais PCs ao mesmo switch. Se usar Internet, siga Internet → Roteador → Switch central.", minimum: "1 switch + 3 PCs" },
     bus: { name: "Barramento", short: "Todos os computadores compartilham uma linha principal.", objective: "Adicione um barramento e ligue pelo menos três computadores aos seus pontos.", minimum: "1 barramento + 3 PCs" },
-    ring: { name: "Anel", short: "Cada equipamento possui exatamente dois vizinhos.", objective: "Feche um ciclo com pelo menos três equipamentos, sem cabos extras.", minimum: "3 equipamentos" },
-    mesh: { name: "Malha", short: "Cada equipamento se conecta diretamente a todos os outros.", objective: "Monte uma malha completa com pelo menos quatro equipamentos.", minimum: "4 equipamentos + 6 cabos" },
+    ring: { name: "Anel", short: "Cada equipamento possui exatamente dois vizinhos.", objective: "Feche um ciclo com pelo menos três equipamentos. Neste desafio, computadores podem ser ligados diretamente.", minimum: "3 equipamentos" },
+    mesh: { name: "Malha", short: "Cada equipamento se conecta diretamente a todos os outros.", objective: "Ligue diretamente cada equipamento a todos os demais. Computadores podem ser conectados entre si.", minimum: "4 equipamentos + 6 cabos" },
     tree: { name: "Árvore", short: "Switches organizam a rede em níveis e ramificações.", objective: "Crie um switch raiz, switches secundários e computadores nas pontas, sem ciclos.", minimum: "2 switches + 2 PCs" }
   };
 

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "savedAt": "2026-07-17T00:00:00.000Z",
+  "project": {
+    "nodes": [
+      {
+        "id": "pc-3",
+        "type": "pc",
+        "name": "PC-3",
+        "x": 250,
+        "y": 200,
+        "width": 142,
+        "height": 158,
+        "status": "connected",
+        "hasNetworkCard": true,
+        "ipv4": {
+          "address": "192.168.1.100",
+          "mask": "255.255.255.0",
+          "gateway": "192.168.1.1"
+        }
+      },
+      {
+        "id": "switch-1",
+        "type": "switch",
+        "name": "Switch-1",
+        "x": 500,
+        "y": 220,
+        "width": 154,
+        "height": 124,
+        "status": "connected"
+      },
+      {
+        "id": "pc-4",
+        "type": "pc",
+        "name": "PC-4",
+        "x": 750,
+        "y": 200,
+        "width": 142,
+        "height": 158,
+        "status": "connected",
+        "hasNetworkCard": true,
+        "ipv4": {
+          "address": "192.168.2.101",
+          "mask": "255.255.255.0",
+          "gateway": "192.168.2.1"
+        }
+      },
+      {
+        "id": "router-1",
+        "type": "router",
+        "name": "Roteador-1",
+        "x": 500,
+        "y": 430,
+        "width": 170,
+        "height": 148,
+        "status": "connected"
+      },
+      {
+        "id": "internet-1",
+        "type": "internet",
+        "name": "Internet",
+        "x": 760,
+        "y": 440,
+        "width": 142,
+        "height": 130,
+        "status": "connected"
+      }
+    ],
+    "connections": [
+      { "id": "cable-pc3-switch", "sourceId": "pc-3", "targetId": "switch-1", "type": "ethernet" },
+      { "id": "cable-pc4-switch", "sourceId": "pc-4", "targetId": "switch-1", "type": "ethernet" },
+      { "id": "cable-switch-router", "sourceId": "switch-1", "targetId": "router-1", "type": "ethernet" },
+      { "id": "cable-router-internet", "sourceId": "router-1", "targetId": "internet-1", "type": "ethernet" }
+    ],
+    "buses": [],
+    "challenge": "free",
+    "hintsUsed": 0,
+    "zoom": 1,
+    "pan": { "x": 0, "y": 0 }
+  },
+  "progress": {
+    "unlocked": ["star"],
+    "completed": { "star": false, "bus": false, "ring": false, "mesh": false, "tree": false },
+    "bestScores": { "star": 0, "bus": 0, "ring": 0, "mesh": 0, "tree": 0 }
+  }
+}

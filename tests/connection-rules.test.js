@@ -22,6 +22,7 @@ function loadScript(name) {
 loadScript("topology-validator.js");
 loadScript("state.js");
 loadScript("connections.js");
+loadScript("ipv4.js");
 loadScript("storage.js");
 
 var NetLab = context.window.NetLab;

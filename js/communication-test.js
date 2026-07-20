@@ -29,6 +29,48 @@
     if (NetLab.State.data.tool === "communication") NetLab.State.setTool("select");
   }
 
+  function pathNeedsRouting(path) {
+    return path.vertices.slice(1, -1).some(function (vertexId) {
+      if (vertexId.indexOf("bus:") === 0) return false;
+      var node = NetLab.State.getNode(vertexId);
+      return node && (node.type === "router" || node.type === "internet");
+    });
+  }
+
+  function logicalResult(source, target, path) {
+    var comparison = NetLab.IPv4.compareNetworks(source.ipv4, target.ipv4);
+    if (!comparison.first || !comparison.second) {
+      var missing = [];
+      if (!comparison.first) missing.push(source.name);
+      if (!comparison.second) missing.push(target.name);
+      return {
+        ok: false,
+        title: "IPv4 não configurado",
+        message: "Configure o endereço IPv4 de " + missing.join(" e ") + " antes de testar a comunicação."
+      };
+    }
+    if (!comparison.compatible) {
+      var detail = source.name + " pertence à rede " + comparison.first.label + " e " + target.name + " pertence à rede " + comparison.second.label + ". ";
+      return {
+        ok: false,
+        title: "Falha na comunicação",
+        message: detail + (comparison.reason === "different-masks" ? "As máscaras de sub-rede são diferentes. " : "As redes são diferentes. ") + "Seria necessário um roteador configurado para encaminhar os pacotes entre elas."
+      };
+    }
+    if (pathNeedsRouting(path)) {
+      return {
+        ok: false,
+        title: "Roteamento não configurado",
+        message: "O caminho entre " + source.name + " e " + target.name + " passa por um roteador. Nesta etapa, o simulador ainda não possui interfaces e rotas configuradas."
+      };
+    }
+    return {
+      ok: true,
+      title: "Pacote entregue!",
+      message: source.name + " e " + target.name + " pertencem à rede " + comparison.first.label + "."
+    };
+  }
+
   function handleNode(nodeId) {
     var node = NetLab.State.getNode(nodeId);
     var draft = NetLab.State.data.communicationDraft;
@@ -62,14 +104,15 @@
       return;
     }
     if (!NetLab.Workspace) return;
-    NetLab.Workspace.animatePath(path).then(function () {
+    var result = logicalResult(source, node, path);
+    NetLab.Workspace.animatePath(path, { variant: result.ok ? "success" : "error" }).then(function () {
       NetLab.State.setTool("select");
-      notify("success", "Pacote entregue!", source.name + " conseguiu se comunicar com " + node.name + ".");
+      notify(result.ok ? "success" : "error", result.title, result.message);
     }).catch(function () {
       NetLab.State.setTool("select");
       notify("error", "Teste interrompido", "A animação do pacote foi cancelada.");
     });
   }
 
-  NetLab.Communication = { start: start, cancel: cancel, handleNode: handleNode };
+  NetLab.Communication = { start: start, cancel: cancel, handleNode: handleNode, logicalResult: logicalResult };
 }());

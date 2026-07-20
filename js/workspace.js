@@ -9,6 +9,7 @@
   var animationToken = 0;
   var isAnimating = false;
   var openNetworkCardNodeId = null;
+  var openIPv4NodeId = null;
 
   function element(tag, className) {
     var item = document.createElement(tag);
@@ -24,7 +25,14 @@
 
   function updateTransform() {
     var state = NetLab.State.data;
-    els.world.style.transform = "translate(" + state.pan.x + "px, " + state.pan.y + "px) scale(" + state.zoom + ")";
+    var supportsLayoutZoom = window.CSS && CSS.supports && CSS.supports("zoom", "1");
+    if (supportsLayoutZoom) {
+      els.world.style.zoom = String(state.zoom);
+      els.world.style.transform = "translate(" + (state.pan.x / state.zoom) + "px, " + (state.pan.y / state.zoom) + "px)";
+    } else {
+      els.world.style.zoom = "";
+      els.world.style.transform = "translate(" + state.pan.x + "px, " + state.pan.y + "px) scale(" + state.zoom + ")";
+    }
     els.workspace.style.backgroundSize = (20 * state.zoom) + "px " + (20 * state.zoom) + "px";
     els.workspace.style.backgroundPosition = state.pan.x + "px " + state.pan.y + "px";
   }
@@ -67,9 +75,20 @@
     if (expanded) expanded.setAttribute("aria-expanded", "false");
   }
 
+  function closeIPv4Popover() {
+    if (!openIPv4NodeId) return;
+    openIPv4NodeId = null;
+    if (!els.nodeLayer) return;
+    var popover = els.nodeLayer.querySelector(".ipv4-popover");
+    if (popover) popover.remove();
+    var expanded = els.nodeLayer.querySelector('.pc-settings-slot[aria-expanded="true"]');
+    if (expanded) expanded.setAttribute("aria-expanded", "false");
+  }
+
   function openNetworkCardSlot(nodeId) {
     var node = NetLab.State.getNode(nodeId);
     if (!node || node.type !== "pc") return false;
+    openIPv4NodeId = null;
     openNetworkCardNodeId = nodeId;
     renderNodes();
     renderSelection();
@@ -80,7 +99,21 @@
     return true;
   }
 
-  function addNetworkCardControl(item, node) {
+  function openIPv4Popover(nodeId) {
+    var node = NetLab.State.getNode(nodeId);
+    if (!node || node.type !== "pc") return false;
+    openNetworkCardNodeId = null;
+    openIPv4NodeId = nodeId;
+    renderNodes();
+    renderSelection();
+    window.setTimeout(function () {
+      var address = els.nodeLayer.querySelector('.ipv4-popover [data-ipv4-field="address"]');
+      if (address) address.focus();
+    }, 0);
+    return true;
+  }
+
+  function addNetworkCardControl(item, node, controls) {
     var installed = Boolean(node.hasNetworkCard);
     var slot = element("button", "network-card-slot" + (installed ? " is-installed" : " is-empty"));
     slot.type = "button";
@@ -110,7 +143,7 @@
       }
       openNetworkCardSlot(node.id);
     });
-    item.appendChild(slot);
+    controls.appendChild(slot);
 
     if (openNetworkCardNodeId !== node.id) return;
     var popover = element("div", "network-card-popover");
@@ -143,6 +176,129 @@
     popover.appendChild(description);
     popover.appendChild(install);
     item.appendChild(popover);
+  }
+
+  function appendIPv4Field(form, nodeId, key, labelText, optional, value, placeholder) {
+    var inputId = "ipv4-" + key + "-" + nodeId;
+    var label = element("label", "ipv4-popover__label");
+    label.setAttribute("for", inputId);
+    label.appendChild(document.createTextNode(labelText));
+    if (optional) {
+      var note = element("span", "ipv4-popover__optional");
+      note.textContent = " (opcional)";
+      label.appendChild(note);
+    }
+    var input = element("input", "ipv4-popover__input");
+    input.id = inputId;
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.maxLength = 15;
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.placeholder = placeholder;
+    input.value = value;
+    input.dataset.ipv4Field = key;
+    form.appendChild(label);
+    form.appendChild(input);
+  }
+
+  function addIPv4Control(item, node, controls) {
+    var configuration = NetLab.IPv4.sanitize(node.ipv4);
+    var configured = Boolean(configuration.address);
+    var button = element("button", "pc-settings-slot" + (configured ? " is-configured" : ""));
+    button.type = "button";
+    button.setAttribute("aria-label", (configured ? "Editar" : "Configurar") + " IPv4 do " + node.name);
+    button.setAttribute("aria-haspopup", "dialog");
+    button.setAttribute("aria-expanded", openIPv4NodeId === node.id ? "true" : "false");
+    button.title = configured ? configuration.address + " — editar IPv4" : "Configurar IPv4";
+    var icon = svgElement("svg", "pc-settings-icon");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("aria-hidden", "true");
+    var use = svgElement("use");
+    use.setAttribute("href", "#i-pc");
+    icon.appendChild(use);
+    button.appendChild(icon);
+    button.addEventListener("pointerdown", function (event) { event.stopPropagation(); });
+    button.addEventListener("dblclick", function (event) { event.stopPropagation(); });
+    button.addEventListener("click", function (event) {
+      event.stopPropagation();
+      if (openIPv4NodeId === node.id) {
+        closeIPv4Popover();
+        return;
+      }
+      openIPv4Popover(node.id);
+    });
+    controls.appendChild(button);
+
+    if (openIPv4NodeId !== node.id) return;
+    var form = element("form", "ipv4-popover");
+    form.noValidate = true;
+    form.setAttribute("role", "dialog");
+    form.setAttribute("aria-label", "Configuração IPv4 do " + node.name);
+    form.addEventListener("pointerdown", function (event) { event.stopPropagation(); });
+    form.addEventListener("dblclick", function (event) { event.stopPropagation(); });
+
+    var head = element("div", "ipv4-popover__head");
+    var headingCopy = element("div", "ipv4-popover__heading-copy");
+    var eyebrow = element("span", "ipv4-popover__eyebrow");
+    eyebrow.textContent = "Rede lógica";
+    var title = element("strong", "ipv4-popover__title");
+    title.textContent = "Configuração IPv4";
+    var mode = element("span", "ipv4-popover__mode");
+    mode.textContent = "Manual";
+    headingCopy.appendChild(eyebrow);
+    headingCopy.appendChild(title);
+    head.appendChild(headingCopy);
+    head.appendChild(mode);
+    form.appendChild(head);
+
+    appendIPv4Field(form, node.id, "address", "Endereço IPv4", false, configuration.address, "192.168.1.10");
+    appendIPv4Field(form, node.id, "mask", "Máscara de sub-rede", false, configuration.mask, "255.255.255.0");
+    appendIPv4Field(form, node.id, "gateway", "Gateway padrão", true, configuration.gateway, "192.168.1.1");
+
+    var error = element("p", "ipv4-popover__error");
+    error.setAttribute("role", "alert");
+    error.hidden = true;
+    form.appendChild(error);
+
+    var actions = element("div", "ipv4-popover__actions");
+    var clear = element("button", "ipv4-popover__clear");
+    clear.type = "button";
+    clear.textContent = "Limpar";
+    var save = element("button", "ipv4-popover__save");
+    save.type = "submit";
+    save.textContent = "Salvar IPv4";
+    actions.appendChild(clear);
+    actions.appendChild(save);
+    form.appendChild(actions);
+
+    form.addEventListener("input", function (event) {
+      event.target.removeAttribute("aria-invalid");
+      error.hidden = true;
+    });
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      form.querySelectorAll("[aria-invalid]").forEach(function (field) { field.removeAttribute("aria-invalid"); });
+      var result = NetLab.Devices.configureIPv4(node.id, {
+        address: form.querySelector('[data-ipv4-field="address"]').value,
+        mask: form.querySelector('[data-ipv4-field="mask"]').value,
+        gateway: form.querySelector('[data-ipv4-field="gateway"]').value
+      });
+      if (!result.valid) {
+        error.textContent = result.message;
+        error.hidden = false;
+        var invalidField = form.querySelector('[data-ipv4-field="' + result.field + '"]');
+        if (invalidField) { invalidField.setAttribute("aria-invalid", "true"); invalidField.focus(); }
+        return;
+      }
+      if (NetLab.App) NetLab.App.feedback("success", result.unchanged ? "IPv4 já configurado" : "IPv4 salvo", result.value.address + "/" + result.prefix + (result.value.gateway ? " · Gateway " + result.value.gateway : " · Sem gateway"));
+    });
+    clear.addEventListener("click", function (event) {
+      event.stopPropagation();
+      if (NetLab.Devices.clearIPv4(node.id) && NetLab.App) NetLab.App.feedback("info", "IPv4 removido", node.name + " voltou a ficar sem configuração IPv4.");
+    });
+    item.appendChild(form);
   }
 
   function createNode(node) {
@@ -179,7 +335,12 @@
       port.setAttribute("aria-hidden", "true");
       item.appendChild(port);
     });
-    if (node.type === "pc") addNetworkCardControl(item, node);
+    if (node.type === "pc") {
+      var controls = element("div", "pc-control-row");
+      item.appendChild(controls);
+      addNetworkCardControl(item, node, controls);
+      addIPv4Control(item, node, controls);
+    }
     item.addEventListener("pointerdown", onNodePointerDown);
     item.addEventListener("dblclick", function (event) {
       event.stopPropagation();
@@ -494,7 +655,10 @@
 
   function onWorkspacePointerDown(event) {
     if (event.button !== 0 || isAnimating) return;
-    if (!event.target.closest || !event.target.closest(".network-card-slot, .network-card-popover")) closeNetworkCardSlot();
+    if (!event.target.closest || !event.target.closest(".network-card-slot, .pc-settings-slot, .network-card-popover, .ipv4-popover")) {
+      closeNetworkCardSlot();
+      closeIPv4Popover();
+    }
     if (event.target.closest && (event.target.closest(".network-node") || event.target.closest(".bus-element") || event.target.closest(".cable-group"))) return;
     var tool = NetLab.State.data.tool;
     if (tool === "pan") { startPan(event); return; }
@@ -580,20 +744,20 @@
     return els.connectionGroup.querySelector('[data-visual][data-kind="' + edge.kind + '"][data-id="' + CSS.escape(edge.id) + '"]');
   }
 
-  function animateSvgPath(pathElement, reverse, duration, token) {
+  function animateSvgPath(pathElement, reverse, duration, token, routeClass) {
     return new Promise(function (resolve, reject) {
       if (!pathElement) { resolve(); return; }
-      pathElement.classList.add("is-route");
+      pathElement.classList.add(routeClass);
       var length = pathElement.getTotalLength();
       var started = performance.now();
       function tick(now) {
-        if (token !== animationToken) { pathElement.classList.remove("is-route"); reject(new Error("cancelled")); return; }
+        if (token !== animationToken) { pathElement.classList.remove(routeClass); reject(new Error("cancelled")); return; }
         var progress = Math.min(1, (now - started) / duration);
         var point = pathElement.getPointAtLength((reverse ? 1 - progress : progress) * length);
         els.packet.setAttribute("cx", point.x);
         els.packet.setAttribute("cy", point.y);
         if (progress < 1) window.requestAnimationFrame(tick);
-        else { window.setTimeout(function () { pathElement.classList.remove("is-route"); }, 140); resolve(); }
+        else { window.setTimeout(function () { pathElement.classList.remove(routeClass); }, 320); resolve(); }
       }
       window.requestAnimationFrame(tick);
     });
@@ -607,52 +771,57 @@
     return null;
   }
 
-  function animateBusSegment(previousEdge, nextEdge, token) {
+  function animateBusSegment(previousEdge, nextEdge, token, routeClass) {
     var previous = attachmentById(previousEdge.id);
     var next = attachmentById(nextEdge.id);
     if (!previous || !next || previous.bus.id !== next.bus.id) return Promise.resolve();
     var start = NetLab.Connections.busPoint(previous.bus, previous.attachment);
     var end = NetLab.Connections.busPoint(next.bus, next.attachment);
     var busElement = els.busLayer.querySelector('[data-id="' + CSS.escape(previous.bus.id) + '"]');
-    if (busElement) busElement.classList.add("is-route");
+    if (busElement) busElement.classList.add(routeClass);
     return new Promise(function (resolve, reject) {
       var started = performance.now();
       function tick(now) {
-        if (token !== animationToken) { if (busElement) busElement.classList.remove("is-route"); reject(new Error("cancelled")); return; }
-        var progress = Math.min(1, (now - started) / 140);
+        if (token !== animationToken) { if (busElement) busElement.classList.remove(routeClass); reject(new Error("cancelled")); return; }
+        var progress = Math.min(1, (now - started) / 750);
         els.packet.setAttribute("cx", start.x + (end.x - start.x) * progress);
         els.packet.setAttribute("cy", start.y + (end.y - start.y) * progress);
         if (progress < 1) window.requestAnimationFrame(tick);
-        else { if (busElement) window.setTimeout(function () { busElement.classList.remove("is-route"); }, 140); resolve(); }
+        else { if (busElement) window.setTimeout(function () { busElement.classList.remove(routeClass); }, 320); resolve(); }
       }
       window.requestAnimationFrame(tick);
     });
   }
 
-  function animatePath(path) {
+  function animatePath(path, options) {
     animationToken += 1;
     var token = animationToken;
+    var variant = options && options.variant === "error" ? "error" : "success";
+    var routeClass = variant === "error" ? "is-route-error" : "is-route";
     isAnimating = true;
+    els.packet.classList.toggle("is-error", variant === "error");
     els.packet.hidden = false;
     var sequence = Promise.resolve();
     path.edges.forEach(function (edge, index) {
       var from = path.vertices[index];
       var to = path.vertices[index + 1];
-      if (from.indexOf("bus:") === 0 && index > 0) sequence = sequence.then(function () { return animateBusSegment(path.edges[index - 1], edge, token); });
+      if (from.indexOf("bus:") === 0 && index > 0) sequence = sequence.then(function () { return animateBusSegment(path.edges[index - 1], edge, token, routeClass); });
       sequence = sequence.then(function () {
         var reverse = false;
         if (edge.kind === "connection") {
           var connection = NetLab.State.data.connections.find(function (item) { return item.id === edge.id; });
           reverse = Boolean(connection && connection.sourceId !== from);
         } else reverse = from.indexOf("bus:") === 0;
-        return animateSvgPath(findVisual(edge), reverse, 180, token);
+        return animateSvgPath(findVisual(edge), reverse, 1000, token, routeClass);
       });
     });
     return sequence.finally(function () {
       if (token === animationToken) {
         isAnimating = false;
         els.packet.hidden = true;
-        els.connectionGroup.querySelectorAll(".is-route").forEach(function (item) { item.classList.remove("is-route"); });
+        els.packet.classList.remove("is-error");
+        els.connectionGroup.querySelectorAll(".is-route, .is-route-error").forEach(function (item) { item.classList.remove("is-route", "is-route-error"); });
+        els.busLayer.querySelectorAll(".is-route, .is-route-error").forEach(function (item) { item.classList.remove("is-route", "is-route-error"); });
       }
     });
   }
@@ -662,8 +831,9 @@
     animationToken += 1;
     isAnimating = false;
     els.packet.hidden = true;
-    els.connectionGroup.querySelectorAll(".is-route").forEach(function (item) { item.classList.remove("is-route"); });
-    els.busLayer.querySelectorAll(".is-route").forEach(function (item) { item.classList.remove("is-route"); });
+    els.packet.classList.remove("is-error");
+    els.connectionGroup.querySelectorAll(".is-route, .is-route-error").forEach(function (item) { item.classList.remove("is-route", "is-route-error"); });
+    els.busLayer.querySelectorAll(".is-route, .is-route-error").forEach(function (item) { item.classList.remove("is-route", "is-route-error"); });
   }
 
   function celebrate() {

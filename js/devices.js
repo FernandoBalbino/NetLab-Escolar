@@ -32,7 +32,8 @@
       width: width,
       height: height,
       status: "disconnected",
-      hasNetworkCard: type === "pc" ? false : undefined
+      hasNetworkCard: type === "pc" ? false : undefined,
+      ipv4: type === "pc" ? NetLab.IPv4.defaultConfiguration() : undefined
     };
     NetLab.State.data.nodes.push(node);
     NetLab.State.data.selected = { kind: "node", id: node.id };
@@ -75,6 +76,32 @@
     node.hasNetworkCard = true;
     NetLab.History.record("install-network-card");
     NetLab.State.emit("install-network-card");
+    return true;
+  }
+
+  function configureIPv4(id, configuration) {
+    var node = NetLab.State.getNode(id);
+    if (!node || node.type !== "pc") return { valid: false, message: "Selecione um computador para configurar o IPv4." };
+    var taken = NetLab.State.data.nodes.filter(function (item) {
+      return item.type === "pc" && item.id !== id && item.ipv4 && item.ipv4.address;
+    }).map(function (item) { return item.ipv4.address; });
+    var result = NetLab.IPv4.validate(configuration, taken);
+    if (!result.valid) return result;
+    if (JSON.stringify(node.ipv4) === JSON.stringify(result.value)) return { valid: true, unchanged: true, value: result.value, prefix: result.prefix };
+    node.ipv4 = result.value;
+    NetLab.History.record("configure-ipv4");
+    NetLab.State.emit("configure-ipv4");
+    return result;
+  }
+
+  function clearIPv4(id) {
+    var node = NetLab.State.getNode(id);
+    if (!node || node.type !== "pc") return false;
+    var empty = NetLab.IPv4.defaultConfiguration();
+    if (JSON.stringify(node.ipv4) === JSON.stringify(empty)) return false;
+    node.ipv4 = empty;
+    NetLab.History.record("clear-ipv4");
+    NetLab.State.emit("clear-ipv4");
     return true;
   }
 
@@ -138,5 +165,5 @@
     return definition ? { width: definition.width, height: definition.height } : null;
   }
 
-  NetLab.Devices = { add: add, addBus: addBus, renameNode: renameNode, installNetworkCard: installNetworkCard, removeNode: removeNode, removeBus: removeBus, removeSelected: removeSelected, clearCanvas: clearCanvas, dimensionsFor: dimensionsFor };
+  NetLab.Devices = { add: add, addBus: addBus, renameNode: renameNode, installNetworkCard: installNetworkCard, configureIPv4: configureIPv4, clearIPv4: clearIPv4, removeNode: removeNode, removeBus: removeBus, removeSelected: removeSelected, clearCanvas: clearCanvas, dimensionsFor: dimensionsFor };
 }());
