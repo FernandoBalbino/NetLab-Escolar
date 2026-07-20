@@ -14,7 +14,7 @@
   }
 
   function allowsDirectPcConnection(challenge) {
-    return ["ring", "mesh", "free"].indexOf(challenge) >= 0;
+    return ["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0;
   }
 
   function activeChallenge() {
@@ -29,7 +29,7 @@
       || (pair === "pc|pc" && allowsDirectPcConnection(topology));
     if (allowed) return { allowed: true, message: "" };
     if (source.type === "internet" || target.type === "internet") return { allowed: false, message: "A Internet só pode ser ligada a um Roteador." };
-    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "Conexões diretas entre PCs são permitidas apenas em Anel, Malha ou Modo livre." };
+    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "Conexões diretas entre PCs são permitidas no Primeiro enlace, em Anel, Malha ou Modo livre." };
     if (source.type === "router" && target.type === "router") return { allowed: false, message: "Conecte cada Roteador à Internet, a um Switch ou a um PC." };
     return { allowed: false, message: "Essa combinação de equipamentos não aceita conexão direta." };
   }

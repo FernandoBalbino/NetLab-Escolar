@@ -4,6 +4,8 @@
   var NetLab = window.NetLab = window.NetLab || {};
   var feedbackTimer = 0;
   var previousSpaceTool = null;
+  var openModules = { basics: false, topologies: false };
+  var modulesInitialized = false;
   var toolLabels = {
     select: "Selecionar",
     pan: "Mover espaço",
@@ -45,19 +47,21 @@
     return button;
   }
 
-  function renderChallenges() {
-    var list = document.getElementById("challenge-list");
+  function renderChallengeList(module) {
+    var list = document.getElementById(module.id + "-challenge-list");
     var fragment = document.createDocumentFragment();
     var current = NetLab.State.data.challenge;
-    NetLab.Challenges.list().forEach(function (challenge) {
+    var completedCount = 0;
+    NetLab.Challenges.list(module.id).forEach(function (challenge) {
       var unlocked = NetLab.Challenges.isUnlocked(challenge.id);
       var completed = NetLab.State.data.progress.completed[challenge.id];
+      if (completed) completedCount += 1;
       var card = document.createElement("article");
       card.className = "challenge-card" + (current === challenge.id ? " is-active" : "") + (!unlocked ? " is-locked" : "");
       var head = document.createElement("div");
       head.className = "challenge-card__head";
       var name = document.createElement("strong");
-      name.textContent = challenge.name;
+      name.textContent = challenge.step ? "Etapa " + challenge.step + " · " + challenge.name : challenge.name;
       var status = document.createElement("span");
       status.className = "challenge-state" + (completed ? " is-done" : "");
       status.textContent = completed ? "Concluída" : unlocked ? challenge.minimum : "Bloqueada";
@@ -75,33 +79,59 @@
       fragment.appendChild(card);
     });
     list.replaceChildren(fragment);
+    document.getElementById(module.id + "-challenge-count").textContent = completedCount + "/" + module.order.length;
+  }
+
+  function renderChallenges() {
+    var activeModule = NetLab.Challenges.moduleFor(NetLab.State.data.challenge);
+    if (!modulesInitialized) {
+      if (activeModule) openModules[activeModule] = true;
+      modulesInitialized = true;
+    }
+    NetLab.Challenges.modules().forEach(function (module) {
+      renderChallengeList(module);
+      var section = document.querySelector('[data-learning-module="' + module.id + '"]');
+      var list = document.getElementById(module.id + "-challenge-list");
+      var toggle = document.querySelector('[data-challenge-module="' + module.id + '"]');
+      var isOpen = Boolean(openModules[module.id]);
+      section.classList.toggle("is-open", isOpen);
+      list.hidden = !isOpen;
+      toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      toggle.textContent = isOpen ? "Fechar exercícios" : "Abrir exercícios";
+    });
   }
 
   function renderProgress() {
     var fragment = document.createDocumentFragment();
-    var completedCount = 0;
-    NetLab.Challenges.list().forEach(function (challenge) {
-      var completed = NetLab.State.data.progress.completed[challenge.id];
-      var score = NetLab.State.data.progress.bestScores[challenge.id] || 0;
-      if (completed) completedCount += 1;
-      var row = document.createElement("div");
-      row.className = "progress-item" + (completed ? " is-done" : "");
-      var check = document.createElement("span");
-      check.className = "progress-check";
-      check.textContent = completed ? "✓" : "·";
-      check.setAttribute("aria-hidden", "true");
-      var name = document.createElement("span");
-      name.textContent = challenge.name + (completed ? " concluída" : " pendente");
-      var scoreLabel = document.createElement("span");
-      scoreLabel.className = "progress-score";
-      scoreLabel.textContent = score ? score + " pts" : "—";
-      row.appendChild(check);
-      row.appendChild(name);
-      row.appendChild(scoreLabel);
-      fragment.appendChild(row);
+    NetLab.Challenges.modules().forEach(function (module) {
+      var group = document.createElement("section");
+      group.className = "progress-group";
+      var heading = document.createElement("strong");
+      heading.className = "progress-group__title";
+      heading.textContent = module.name;
+      group.appendChild(heading);
+      NetLab.Challenges.list(module.id).forEach(function (challenge) {
+        var completed = NetLab.State.data.progress.completed[challenge.id];
+        var score = NetLab.State.data.progress.bestScores[challenge.id] || 0;
+        var row = document.createElement("div");
+        row.className = "progress-item" + (completed ? " is-done" : "");
+        var check = document.createElement("span");
+        check.className = "progress-check";
+        check.textContent = completed ? "✓" : "·";
+        check.setAttribute("aria-hidden", "true");
+        var name = document.createElement("span");
+        name.textContent = challenge.name + (completed ? " concluída" : " pendente");
+        var scoreLabel = document.createElement("span");
+        scoreLabel.className = "progress-score";
+        scoreLabel.textContent = score ? score + " pts" : "—";
+        row.appendChild(check);
+        row.appendChild(name);
+        row.appendChild(scoreLabel);
+        group.appendChild(row);
+      });
+      fragment.appendChild(group);
     });
     document.getElementById("progress-list").replaceChildren(fragment);
-    document.getElementById("challenge-count").textContent = completedCount + "/5";
   }
 
   function selectedDescription() {
@@ -198,9 +228,10 @@
       if (NetLab.State.data.challenge === "free") {
         feedback("success", "Topologia reconhecida", "Você criou uma topologia em " + topologyNames[validation.topology] + ".");
       } else {
-        var definition = NetLab.Challenges.get(validation.topology);
-        var next = validation.nextUnlocked ? " O próximo desafio foi liberado." : " Você concluiu todos os desafios!";
-        feedback("success", "Parabéns! " + validation.score + " pontos", "Você criou corretamente uma topologia em " + definition.name.toLowerCase() + "." + next);
+        var definition = NetLab.Challenges.get(NetLab.State.data.challenge);
+        var next = validation.nextUnlocked ? " O próximo exercício foi liberado." : " Você concluiu todos os exercícios desta trilha!";
+        var message = definition.success || "Você criou corretamente uma topologia em " + definition.name.toLowerCase() + ".";
+        feedback("success", "Parabéns! " + validation.score + " pontos", message + next);
       }
       return;
     }
@@ -212,6 +243,7 @@
     if (hasElements() && !window.confirm("Iniciar este desafio limpará a área de trabalho atual. Deseja continuar?")) return;
     if (NetLab.Challenges.start(id)) {
       var challenge = NetLab.Challenges.get(id);
+      openModules[challenge.module] = true;
       feedback("info", "Desafio iniciado", challenge.objective);
       if (window.innerWidth <= 760) {
         NetLab.State.data.preferences.sidebarCollapsed = true;
@@ -314,7 +346,14 @@
     document.querySelectorAll("[data-add]").forEach(function (button) {
       button.addEventListener("click", function () { NetLab.Workspace.addAtCenter(button.dataset.add); });
     });
-    document.getElementById("challenge-list").addEventListener("click", function (event) {
+    document.getElementById("learning-modules").addEventListener("click", function (event) {
+      var toggle = event.target.closest("[data-challenge-module]");
+      if (toggle) {
+        var moduleId = toggle.dataset.challengeModule;
+        openModules[moduleId] = !openModules[moduleId];
+        renderChallenges();
+        return;
+      }
       var button = event.target.closest("[data-challenge]");
       if (button && !button.disabled) startChallenge(button.dataset.challenge);
     });

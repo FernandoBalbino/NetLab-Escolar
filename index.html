@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Simulador educativo de topologias de redes para estudantes do ensino médio.">
+  <meta name="description" content="Simulador educativo de redes, IPv4 e topologias para estudantes do ensino médio.">
   <meta name="theme-color" content="#f7f9fc">
   <title>NetLab Escolar</title>
   <link rel="icon" type="image/png" href="./assets/images/pc.png">
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="stylesheet" href="./css/workspace.css">
-  <link rel="stylesheet" href="./css/responsive.css">
+  <link rel="stylesheet" href="./css/style.css?v=20260720-4">
+  <link rel="stylesheet" href="./css/workspace.css?v=20260720-4">
+  <link rel="stylesheet" href="./css/responsive.css?v=20260720-4">
 </head>
 <body>
   <a class="skip-link" href="#workspace">Ir para a área de trabalho</a>
@@ -72,7 +72,7 @@
       <span class="toolbar-divider" aria-hidden="true"></span>
       <div class="tool-group" role="group" aria-label="Testes da rede">
         <button class="tool-button" type="button" data-action="clear" aria-label="Limpar projeto" data-tooltip="Limpar projeto"><svg aria-hidden="true"><use href="#i-clear"></use></svg></button>
-        <button class="tool-button tool-button--success" type="button" data-action="verify" aria-label="Verificar topologia" data-tooltip="Verificar topologia"><svg aria-hidden="true"><use href="#i-check"></use></svg></button>
+        <button class="tool-button tool-button--success" type="button" data-action="verify" aria-label="Verificar exercício atual" data-tooltip="Verificar exercício"><svg aria-hidden="true"><use href="#i-check"></use></svg></button>
         <button class="tool-button tool-button--packet" type="button" data-action="communicate" aria-label="Testar comunicação" data-tooltip="Testar comunicação"><svg aria-hidden="true"><use href="#i-packet"></use></svg></button>
       </div>
     </nav>
@@ -120,10 +120,29 @@
 
         <section class="side-section" aria-labelledby="challenge-title">
           <div class="section-heading">
-            <div><span class="eyebrow">Aprender</span><h2 id="challenge-title">Topologias</h2></div>
-            <span id="challenge-count" class="count-badge">0/5</span>
+            <div><span class="eyebrow">Aprender</span><h2 id="challenge-title">Trilhas de exercícios</h2></div>
           </div>
-          <div id="challenge-list" class="challenge-list"></div>
+          <div id="learning-modules" class="learning-modules">
+            <article class="learning-module" data-learning-module="basics">
+              <div class="learning-module__head">
+                <div><span class="learning-module__step">Comece aqui</span><strong>Redes básicas</strong></div>
+                <span id="basics-challenge-count" class="count-badge">0/5</span>
+              </div>
+              <p>Do primeiro cabo até uma LAN conectada à Internet.</p>
+              <button class="module-toggle" type="button" data-challenge-module="basics" aria-expanded="false" aria-controls="basics-challenge-list">Abrir exercícios</button>
+              <div id="basics-challenge-list" class="challenge-list" hidden></div>
+            </article>
+
+            <article class="learning-module" data-learning-module="topologies">
+              <div class="learning-module__head">
+                <div><span class="learning-module__step">Pratique formas</span><strong>Topologias</strong></div>
+                <span id="topologies-challenge-count" class="count-badge">0/5</span>
+              </div>
+              <p>Estrela, Barramento, Anel, Malha e Árvore.</p>
+              <button class="module-toggle" type="button" data-challenge-module="topologies" aria-expanded="false" aria-controls="topologies-challenge-list">Abrir exercícios</button>
+              <div id="topologies-challenge-list" class="challenge-list" hidden></div>
+            </article>
+          </div>
         </section>
 
         <section id="active-challenge" class="side-section active-challenge" aria-labelledby="active-challenge-title">
@@ -213,17 +232,18 @@
     </section>
   </div>
 
-  <script defer src="./js/state.js"></script>
-  <script defer src="./js/history.js"></script>
-  <script defer src="./js/ipv4.js"></script>
-  <script defer src="./js/storage.js"></script>
-  <script defer src="./js/devices.js"></script>
-  <script defer src="./js/connections.js"></script>
-  <script defer src="./js/topology-validator.js"></script>
-  <script defer src="./js/challenges.js"></script>
-  <script defer src="./js/communication-test.js"></script>
-  <script defer src="./js/tutorial.js"></script>
-  <script defer src="./js/workspace.js"></script>
-  <script defer src="./js/app.js"></script>
+  <script defer src="./js/state.js?v=20260720-4"></script>
+  <script defer src="./js/history.js?v=20260720-4"></script>
+  <script defer src="./js/ipv4.js?v=20260720-4"></script>
+  <script defer src="./js/storage.js?v=20260720-4"></script>
+  <script defer src="./js/devices.js?v=20260720-4"></script>
+  <script defer src="./js/connections.js?v=20260720-4"></script>
+  <script defer src="./js/topology-validator.js?v=20260720-4"></script>
+  <script defer src="./js/network-basics-validator.js?v=20260720-4"></script>
+  <script defer src="./js/challenges.js?v=20260720-4"></script>
+  <script defer src="./js/communication-test.js?v=20260720-4"></script>
+  <script defer src="./js/tutorial.js?v=20260720-4"></script>
+  <script defer src="./js/workspace.js?v=20260720-4"></script>
+  <script defer src="./js/app.js?v=20260720-4"></script>
 </body>
 </html>

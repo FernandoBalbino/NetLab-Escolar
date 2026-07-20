@@ -22,7 +22,7 @@
   function pairAllowed(source, target, challenge) {
     var pair = [source.type, target.type].sort().join("|");
     return ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
-      || (pair === "pc|pc" && ["ring", "mesh", "free"].indexOf(challenge) >= 0);
+      || (pair === "pc|pc" && ["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0);
   }
 
   function sanitizeProject(project, options) {

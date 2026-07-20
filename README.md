@@ -1,6 +1,6 @@
 # NetLab Escolar
 
-O **NetLab Escolar** é um simulador educativo de redes feito para alunos do ensino médio. Ele permite montar o caminho Internet → Roteador → Switch → PCs, instalar placas de rede, criar cabos e um barramento compartilhado, praticar cinco topologias e receber feedback sobre cada tentativa.
+O **NetLab Escolar** é um simulador educativo de redes feito para alunos do ensino médio. Ele permite montar o caminho Internet → Roteador → Switch → PCs, instalar placas de rede, configurar IPv4, criar cabos e um barramento compartilhado, praticar redes básicas e cinco topologias, além de receber feedback sobre cada tentativa.
 
 O projeto usa somente HTML5, CSS3 e JavaScript puro. Não há backend, banco de dados, bibliotecas externas ou etapa de compilação.
 
@@ -36,6 +36,7 @@ NetLab-Escolar/
     ├── storage.js
     ├── devices.js
     ├── connections.js
+    ├── network-basics-validator.js
     ├── topology-validator.js
     ├── challenges.js
     ├── communication-test.js
@@ -85,6 +86,15 @@ O arquivo `js/topology-validator.js` transforma equipamentos em vértices e cabo
 Na estrela, a forma da LAN e o acesso à Internet são verificações separadas. Se todos os PCs estiverem ligados diretamente ao mesmo switch, a topologia continua válida mesmo sem Internet; os equipamentos apenas permanecem com o estado visual **Sem internet**. Quando os nós externos são usados, o roteador deve estar ligado ao switch central e a Internet deve estar ligada ao roteador.
 
 O teste de comunicação usa busca em largura (BFS) para encontrar um caminho entre dois computadores e animar um pacote sobre os cabos encontrados.
+
+## Trilhas de exercícios
+
+Os exercícios ficam recolhidos em dois módulos que podem ser abertos separadamente:
+
+- **Redes básicas:** cinco etapas progressivas — conexão direta entre dois PCs, rede com switch, LAN com três PCs, roteador na borda e caminho completo até a Internet.
+- **Topologias:** Estrela, Barramento, Anel, Malha e Árvore.
+
+Na trilha de redes básicas, cada computador precisa de placa de rede, endereço IPv4 único e máscara compatível. A etapa só é concluída depois que o aluno executa **Testar comunicação** com sucesso e verifica o exercício. Alterar cabos ou configurações depois do teste invalida essa comprovação e exige um novo envio de pacote.
 
 ## Como criar um novo desafio
 

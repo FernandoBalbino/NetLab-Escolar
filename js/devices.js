@@ -152,6 +152,7 @@
     NetLab.State.data.selected = null;
     NetLab.State.data.connectionDraft = null;
     NetLab.State.data.communicationDraft = null;
+    NetLab.State.data.communicationProof = null;
     if (!keepChallenge) {
       NetLab.State.data.challenge = "free";
       NetLab.State.data.hintsUsed = 0;

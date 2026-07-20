@@ -79,6 +79,7 @@
 }
 .network-node--pc { padding: 8px 8px 44px; }
 .network-node--switch, .network-node--router, .network-node--internet { padding: 10px; }
+.network-node.has-open-popover { z-index: 30; }
 .network-node:active { cursor: grabbing; }
 .network-node:hover { border-color: var(--blue-100); box-shadow: 0 8px 22px rgba(35, 47, 68, .16); }
 .network-node.is-selected { border-color: var(--blue-600); box-shadow: 0 0 0 4px rgba(37, 99, 235, .13), 0 10px 24px rgba(35, 47, 68, .16); }

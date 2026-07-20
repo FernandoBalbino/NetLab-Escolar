@@ -72,7 +72,11 @@
     var popover = els.nodeLayer.querySelector(".network-card-popover");
     if (popover) popover.remove();
     var expanded = els.nodeLayer.querySelector('.network-card-slot[aria-expanded="true"]');
-    if (expanded) expanded.setAttribute("aria-expanded", "false");
+    if (expanded) {
+      expanded.setAttribute("aria-expanded", "false");
+      var owner = expanded.closest(".network-node");
+      if (owner) owner.classList.remove("has-open-popover");
+    }
   }
 
   function closeIPv4Popover() {
@@ -82,7 +86,11 @@
     var popover = els.nodeLayer.querySelector(".ipv4-popover");
     if (popover) popover.remove();
     var expanded = els.nodeLayer.querySelector('.pc-settings-slot[aria-expanded="true"]');
-    if (expanded) expanded.setAttribute("aria-expanded", "false");
+    if (expanded) {
+      expanded.setAttribute("aria-expanded", "false");
+      var owner = expanded.closest(".network-node");
+      if (owner) owner.classList.remove("has-open-popover");
+    }
   }
 
   function openNetworkCardSlot(nodeId) {
@@ -305,7 +313,8 @@
     var connected = node.status === "connected";
     var noInternet = node.status === "no-internet";
     var cardStateClass = node.type === "pc" ? (node.hasNetworkCard ? " has-network-card" : " needs-network-card") : "";
-    var item = element("div", "network-node network-node--" + node.type + (connected ? " is-connected" : "") + (noInternet ? " is-no-internet" : "") + cardStateClass);
+    var popoverStateClass = openNetworkCardNodeId === node.id || openIPv4NodeId === node.id ? " has-open-popover" : "";
+    var item = element("div", "network-node network-node--" + node.type + (connected ? " is-connected" : "") + (noInternet ? " is-no-internet" : "") + cardStateClass + popoverStateClass);
     item.dataset.id = node.id;
     item.dataset.type = node.type;
     item.style.left = node.x + "px";

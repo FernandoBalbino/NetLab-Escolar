@@ -3,7 +3,10 @@
 
   var NetLab = window.NetLab = window.NetLab || {};
   var listeners = [];
-  var challengeIds = ["star", "bus", "ring", "mesh", "tree"];
+  var challengeIds = [
+    "basic-direct", "basic-switch", "basic-lan", "basic-router", "basic-internet",
+    "star", "bus", "ring", "mesh", "tree"
+  ];
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -17,10 +20,16 @@
   }
 
   function defaultProgress() {
+    var completed = {};
+    var bestScores = {};
+    challengeIds.forEach(function (id) {
+      completed[id] = false;
+      bestScores[id] = 0;
+    });
     return {
-      unlocked: ["star"],
-      completed: { star: false, bus: false, ring: false, mesh: false, tree: false },
-      bestScores: { star: 0, bus: 0, ring: 0, mesh: 0, tree: 0 }
+      unlocked: ["basic-direct", "star"],
+      completed: completed,
+      bestScores: bestScores
     };
   }
 
@@ -36,6 +45,7 @@
     pan: { x: 0, y: 0 },
     connectionDraft: null,
     communicationDraft: null,
+    communicationProof: null,
     progress: defaultProgress(),
     preferences: { sidebarCollapsed: false, tutorialHidden: false, tutorialSeen: false }
   };
@@ -93,6 +103,7 @@
     state.selected = null;
     state.connectionDraft = null;
     state.communicationDraft = null;
+    state.communicationProof = null;
     state.tool = "select";
     emit(reason || "restore");
   }
@@ -105,7 +116,7 @@
       fresh.bestScores[id] = Math.max(0, Math.min(100, Number(progress.bestScores && progress.bestScores[id]) || 0));
     });
     var unlocked = Array.isArray(progress.unlocked) ? progress.unlocked.filter(function (id) { return challengeIds.indexOf(id) >= 0; }) : [];
-    fresh.unlocked = Array.from(new Set(["star"].concat(unlocked)));
+    fresh.unlocked = Array.from(new Set(["basic-direct", "star"].concat(unlocked)));
     return fresh;
   }
 

@@ -106,6 +106,7 @@
     if (!NetLab.Workspace) return;
     var result = logicalResult(source, node, path);
     NetLab.Workspace.animatePath(path, { variant: result.ok ? "success" : "error" }).then(function () {
+      if (result.ok && NetLab.Challenges) NetLab.Challenges.recordCommunicationSuccess(source, node);
       NetLab.State.setTool("select");
       notify(result.ok ? "success" : "error", result.title, result.message);
     }).catch(function () {
