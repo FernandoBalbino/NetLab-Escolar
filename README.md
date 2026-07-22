@@ -150,4 +150,12 @@ O botão **Exportar** gera `netlab-escolar-projeto.json`. O arquivo contém a ve
 5. Escolha a branch **main** e a pasta **/root**.
 6. Clique em **Save** e aguarde a publicação.
 
+## Instalação e uso offline
+
+O NetLab Escolar é uma PWA instalável. Depois do primeiro acesso completo pelo GitHub Pages, o Service Worker salva localmente a interface, scripts, estilos e todas as imagens usadas pelo laboratório.
+
+No Chrome ou Chromebook, abra o site e use o ícone **Instalar** na barra de endereço. Depois da instalação, o laboratório abre sem internet e mantém projetos, progresso e preferências no `localStorage` do dispositivo.
+
+O cache atual é `netlab-offline-v1`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
+
 Não altere os caminhos relativos nem mova o `index.html` para fora da raiz publicada.
