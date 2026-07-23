@@ -1,6 +1,6 @@
 # NetLab Escolar
 
-O **NetLab Escolar** é um simulador educativo de redes feito para alunos do ensino médio. Ele permite montar o caminho Internet → Roteador → Switch → PCs, instalar placas de rede, configurar IPv4, criar cabos e um barramento compartilhado, praticar redes básicas e cinco topologias, além de receber feedback sobre cada tentativa.
+O **NetLab Escolar** é um simulador educativo de redes feito para alunos do ensino médio. Ele permite montar o caminho Internet → Roteador → Switch → PCs, instalar placas de rede, configurar IPv4, criar cabos e um barramento compartilhado, praticar redes básicas, LAN/MAN/WAN e cinco topologias, além de receber feedback sobre cada tentativa.
 
 O projeto usa somente HTML5, CSS3 e JavaScript puro. Não há backend, banco de dados, bibliotecas externas ou etapa de compilação.
 
@@ -25,7 +25,8 @@ NetLab-Escolar/
 │       ├── roteador.png
 │       ├── pc.png
 │       ├── switch.png
-│       └── placa-de-rede.png
+│       ├── placa-de-rede.png
+│       └── porta-rj45.png
 ├── css/
 │   ├── style.css
 │   ├── workspace.css
@@ -33,10 +34,12 @@ NetLab-Escolar/
 └── js/
     ├── state.js
     ├── history.js
+    ├── port-model.js
     ├── storage.js
     ├── devices.js
     ├── connections.js
     ├── network-basics-validator.js
+    ├── network-types-validator.js
     ├── topology-validator.js
     ├── challenges.js
     ├── communication-test.js
@@ -56,6 +59,7 @@ As imagens ficam em `assets/images/`:
 - `roteador.png`: imagem dos roteadores.
 - `internet.png`: imagem da fonte de Internet.
 - `placa-de-rede.png`: imagem exibida no tutorial e no slot de expansão de cada computador.
+- `porta-rj45.png`: entrada de rede com fundo transparente usada nas trilhas com portas físicas.
 
 Cada computador novo começa sem placa de rede. Clique no slot quadrado do cartão do PC, escolha **Adicionar ao computador** e depois use a ferramenta de cabo. PCs sem placa não aceitam cabos, ligações ao barramento nem testes de comunicação.
 
@@ -89,9 +93,10 @@ O teste de comunicação usa busca em largura (BFS) para encontrar um caminho en
 
 ## Trilhas de exercícios
 
-Os exercícios ficam recolhidos em dois módulos que podem ser abertos separadamente:
+Os exercícios ficam recolhidos em três módulos que podem ser abertos separadamente:
 
 - **Redes básicas:** cinco etapas progressivas — conexão direta entre dois PCs, rede com switch, LAN com três PCs, roteador na borda e caminho completo até a Internet.
+- **Tipos de redes:** cinco etapas para praticar LAN, expansão por switch, entrada WAN, enlace MAN e uma infraestrutura combinando LAN/MAN/WAN. Somente nessa trilha o roteador expõe 3 portas LAN + 1 WAN e o switch expõe 5 portas; cada cabo ocupa uma porta livre.
 - **Topologias:** Estrela, Barramento, Anel, Malha e Árvore.
 
 Na trilha de redes básicas, cada computador precisa de placa de rede, endereço IPv4 único e máscara compatível. A etapa só é concluída depois que o aluno executa **Testar comunicação** com sucesso e verifica o exercício. Alterar cabos ou configurações depois do teste invalida essa comprovação e exige um novo envio de pacote.
@@ -156,6 +161,6 @@ O NetLab Escolar é uma PWA instalável. Depois do primeiro acesso completo pelo
 
 No Chrome ou Chromebook, abra o site e use o ícone **Instalar** na barra de endereço. Depois da instalação, o laboratório abre sem internet e mantém projetos, progresso e preferências no `localStorage` do dispositivo.
 
-O cache atual é `netlab-offline-v1`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
+O cache atual é `netlab-offline-v2`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
 
 Não altere os caminhos relativos nem mova o `index.html` para fora da raiz publicada.

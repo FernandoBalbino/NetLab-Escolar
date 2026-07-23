@@ -5,6 +5,7 @@
   var listeners = [];
   var challengeIds = [
     "basic-direct", "basic-switch", "basic-lan", "basic-router", "basic-internet",
+    "types-lan-ports", "types-switch-capacity", "types-wan-access", "types-man-link", "types-complete",
     "star", "bus", "ring", "mesh", "tree"
   ];
 
@@ -27,7 +28,7 @@
       bestScores[id] = 0;
     });
     return {
-      unlocked: ["basic-direct", "star"],
+      unlocked: ["basic-direct", "types-lan-ports", "star"],
       completed: completed,
       bestScores: bestScores
     };
@@ -116,7 +117,7 @@
       fresh.bestScores[id] = Math.max(0, Math.min(100, Number(progress.bestScores && progress.bestScores[id]) || 0));
     });
     var unlocked = Array.isArray(progress.unlocked) ? progress.unlocked.filter(function (id) { return challengeIds.indexOf(id) >= 0; }) : [];
-    fresh.unlocked = Array.from(new Set(["basic-direct", "star"].concat(unlocked)));
+    fresh.unlocked = Array.from(new Set(["basic-direct", "types-lan-ports", "star"].concat(unlocked)));
     return fresh;
   }
 

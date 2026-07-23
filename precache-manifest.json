@@ -5,11 +5,13 @@
   "./js/state.js",
   "./js/history.js",
   "./js/ipv4.js",
+  "./js/port-model.js",
   "./js/storage.js",
   "./js/devices.js",
   "./js/connections.js",
   "./js/topology-validator.js",
   "./js/network-basics-validator.js",
+  "./js/network-types-validator.js",
   "./js/challenges.js",
   "./js/communication-test.js",
   "./js/tutorial.js",
@@ -21,6 +23,7 @@
   "./assets/images/switch.png",
   "./assets/images/pc.png",
   "./assets/images/placa-de-rede.png",
+  "./assets/images/porta-rj45.png",
   "./assets/images/icone-192.png",
   "./assets/images/icone-512.png"
 ]

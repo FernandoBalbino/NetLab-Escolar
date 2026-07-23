@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'netlab-offline-v1';
+const CACHE_VERSION = 'netlab-offline-v2';
 const CACHE_PREFIX = 'netlab-offline-';
 
 const CORE_FILES = [

@@ -21,13 +21,16 @@ NetLab.NetworkBasicsValidator = {
   validate(id) { return { valid: true, topology: id, challengeId: id, hints: [], details: {} }; },
   signature() { return "signature"; }
 };
+NetLab.NetworkTypesValidator = {
+  validate(id) { return { valid: true, topology: id, challengeId: id, hints: [], details: {} }; }
+};
 NetLab.TopologyValidator = {
   validate(id) { return { valid: true, topology: id, hints: [], details: {} }; }
 };
 loadScript("challenges.js");
 
-test("mantém progressões independentes para redes básicas e topologias", () => {
-  assert.deepEqual(Array.from(NetLab.State.data.progress.unlocked).sort(), ["basic-direct", "star"]);
+test("mantém progressões independentes para as três trilhas", () => {
+  assert.deepEqual(Array.from(NetLab.State.data.progress.unlocked).sort(), ["basic-direct", "star", "types-lan-ports"]);
 
   assert.equal(NetLab.Challenges.start("basic-direct"), true);
   const basicResult = NetLab.Challenges.validateCurrent();
@@ -36,6 +39,13 @@ test("mantém progressões independentes para redes básicas e topologias", () =
   assert.equal(NetLab.State.data.progress.completed["basic-direct"], true);
   assert.equal(NetLab.Challenges.isUnlocked("basic-switch"), true);
   assert.equal(NetLab.Challenges.isUnlocked("basic-lan"), false);
+
+  assert.equal(NetLab.Challenges.start("types-lan-ports"), true);
+  const typesResult = NetLab.Challenges.validateCurrent();
+  assert.equal(typesResult.valid, true);
+  assert.equal(typesResult.nextUnlocked, "types-switch-capacity");
+  assert.equal(NetLab.Challenges.isUnlocked("types-switch-capacity"), true);
+  assert.equal(NetLab.Challenges.isUnlocked("types-wan-access"), false);
 
   assert.equal(NetLab.Challenges.start("star"), true);
   const topologyResult = NetLab.Challenges.validateCurrent();

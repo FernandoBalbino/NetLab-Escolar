@@ -76,6 +76,7 @@ test("exige IPv4 configurado nos dois computadores", () => {
 });
 
 require("../js/state.js");
+require("../js/port-model.js");
 require("../js/storage.js");
 
 function projectWith(ipv4) {

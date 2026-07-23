@@ -9,6 +9,12 @@
       short: "Cinco etapas para sair do primeiro cabo e chegar a uma rede com Internet.",
       order: ["basic-direct", "basic-switch", "basic-lan", "basic-router", "basic-internet"]
     },
+    types: {
+      id: "types",
+      name: "Tipos de redes",
+      short: "Pratique LAN, MAN, WAN e o uso correto das portas físicas.",
+      order: ["types-lan-ports", "types-switch-capacity", "types-wan-access", "types-man-link", "types-complete"]
+    },
     topologies: {
       id: "topologies",
       name: "Topologias",
@@ -62,13 +68,58 @@
       minimum: "Internet + roteador + switch + 3 PCs",
       success: "Você completou o caminho da Internet até uma LAN configurada."
     },
+    "types-lan-ports": {
+      module: "types",
+      step: 1,
+      name: "As portas da LAN",
+      short: "Descubra quantos equipamentos cabem diretamente no roteador.",
+      objective: "Monte uma LAN com um roteador e três computadores. Instale as placas e ligue cada PC a uma porta LAN diferente. Deixe a porta WAN livre.",
+      minimum: "1 roteador + 3 PCs",
+      success: "Você ocupou corretamente as três portas LAN do roteador."
+    },
+    "types-switch-capacity": {
+      module: "types",
+      step: 2,
+      name: "Expanda com um switch",
+      short: "Use o switch quando as três portas LAN não forem suficientes.",
+      objective: "Crie uma rede com um roteador, um switch e quatro computadores. Use uma LAN do roteador como uplink e as cinco portas do switch: uma para o roteador e quatro para os PCs.",
+      minimum: "Roteador + switch + 4 PCs",
+      success: "O switch ampliou a LAN e acomodou os quatro computadores."
+    },
+    "types-wan-access": {
+      module: "types",
+      step: 3,
+      name: "A entrada WAN",
+      short: "Separe a entrada da Internet das saídas da rede local.",
+      objective: "Ligue a Internet à porta WAN de um roteador e conecte dois computadores a portas LAN diferentes.",
+      minimum: "Internet + roteador + 2 PCs",
+      success: "Você separou corretamente a WAN das conexões LAN."
+    },
+    "types-man-link": {
+      module: "types",
+      step: 4,
+      name: "Duas LANs, uma MAN",
+      short: "Una duas redes locais por um enlace entre roteadores.",
+      objective: "Use dois roteadores e dois computadores. Crie uma LAN em cada lado e represente a MAN ligando a porta WAN de um roteador à WAN do outro.",
+      minimum: "2 roteadores + 2 PCs",
+      success: "As duas LANs agora estão unidas por um enlace MAN."
+    },
+    "types-complete": {
+      module: "types",
+      step: 5,
+      name: "LAN, MAN e WAN",
+      short: "Combine os três alcances em uma única infraestrutura.",
+      objective: "Monte Internet → WAN do roteador principal → LAN para a WAN do segundo roteador → LAN para um switch. Deixe um PC no roteador principal e conecte outros três ao switch.",
+      minimum: "Internet + 2 roteadores + switch + 4 PCs",
+      success: "Você combinou WAN, enlace entre redes e duas LANs usando as portas certas."
+    },
     star: { module: "topologies", name: "Estrela", short: "Um switch no centro conecta os computadores da LAN.", objective: "Conecte três ou mais PCs ao mesmo switch. Se usar Internet, siga Internet → Roteador → Switch central.", minimum: "1 switch + 3 PCs" },
     bus: { module: "topologies", name: "Barramento", short: "Todos os computadores compartilham uma linha principal.", objective: "Adicione um barramento e ligue pelo menos três computadores aos seus pontos.", minimum: "1 barramento + 3 PCs" },
     ring: { module: "topologies", name: "Anel", short: "Cada equipamento possui exatamente dois vizinhos.", objective: "Feche um ciclo com pelo menos três equipamentos. Neste desafio, computadores podem ser ligados diretamente.", minimum: "3 equipamentos" },
     mesh: { module: "topologies", name: "Malha", short: "Cada equipamento se conecta diretamente a todos os outros.", objective: "Ligue diretamente cada equipamento a todos os demais. Computadores podem ser conectados entre si.", minimum: "4 equipamentos + 6 cabos" },
     tree: { module: "topologies", name: "Árvore", short: "Switches organizam a rede em níveis e ramificações.", objective: "Crie um switch raiz, switches secundários e computadores nas pontas, sem ciclos.", minimum: "2 switches + 2 PCs" }
   };
-  var order = modules.basics.order.concat(modules.topologies.order);
+  var order = modules.basics.order.concat(modules.types.order, modules.topologies.order);
 
   function get(id) { return definitions[id] || null; }
   function list(moduleId) {
@@ -76,7 +127,7 @@
     return ids.map(function (id) { return Object.assign({ id: id }, definitions[id]); });
   }
   function listModules() {
-    return [modules.basics, modules.topologies].map(function (module) {
+    return [modules.basics, modules.types, modules.topologies].map(function (module) {
       return { id: module.id, name: module.name, short: module.short, order: module.order.slice() };
     });
   }
@@ -118,6 +169,7 @@
     if (definition.module === "basics") {
       return NetLab.NetworkBasicsValidator.validate(id, snapshot, NetLab.State.data.communicationProof);
     }
+    if (definition.module === "types") return NetLab.NetworkTypesValidator.validate(id, snapshot);
     return NetLab.TopologyValidator.validate(id, snapshot);
   }
 

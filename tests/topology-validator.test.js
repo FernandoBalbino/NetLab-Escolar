@@ -9,6 +9,7 @@ var context = { window: { NetLab: {} }, Map: Map, Set: Set };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "js", "topology-validator.js"), "utf8"), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "js", "state.js"), "utf8"), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "js", "port-model.js"), "utf8"), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "js", "connections.js"), "utf8"), context);
 
 function node(id, type) {

@@ -4,7 +4,7 @@
   var NetLab = window.NetLab = window.NetLab || {};
   var feedbackTimer = 0;
   var previousSpaceTool = null;
-  var openModules = { basics: false, topologies: false };
+  var openModules = { basics: false, types: false, topologies: false };
   var modulesInitialized = false;
   var toolLabels = {
     select: "Selecionar",
@@ -215,7 +215,9 @@
       "add-router": "Clique no espaço de trabalho para posicionar um roteador.",
       "add-pc": "Clique no espaço de trabalho para posicionar um computador.",
       "add-switch": "Clique no espaço de trabalho para posicionar um switch.",
-      cable: "Clique no equipamento de origem e depois no destino. PCs precisam de placa de rede.",
+      cable: NetLab.PortModel.isPortChallenge(NetLab.State.data.challenge)
+        ? "Escolha uma porta livre no roteador ou switch. PCs precisam de placa de rede."
+        : "Clique no equipamento de origem e depois no destino. PCs precisam de placa de rede.",
       "add-bus": "Clique no espaço de trabalho para criar o barramento."
     };
     if (hints[tool]) NetLab.Workspace.showHint(hints[tool]);

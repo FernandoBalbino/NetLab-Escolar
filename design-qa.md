@@ -1,44 +1,46 @@
-# Design QA — sidebar sem ações de arquivo
+# Design QA — trilha Tipos de redes e portas físicas
 
-- Source visual truth: `C:\Users\Fernando\AppData\Local\Temp\codex-clipboard-5c30cd88-dfa0-4756-b88b-c4e7fff569f2.png`
-- Implementation screenshot: `C:\Users\Fernando\Desktop\netlab\qa-artifacts\sidebar-after-full.png`
-- Focused comparison: `C:\Users\Fernando\Desktop\netlab\qa-artifacts\sidebar-comparison.png`
-- Viewport: 1280 × 720
-- State: desktop, sidebar aberta, modo livre
+- Referência visual principal: `C:\Users\Fernando\AppData\Local\Temp\codex-clipboard-af0cfc21-456a-4aec-8743-f4fb35eee8c5.png`
+- Referência física: `C:\Users\Fernando\AppData\Local\Temp\codex-clipboard-036fe61e-de93-4f84-9840-d2bbce4c16e9.png`
+- Implementação completa: `C:\Users\Fernando\Desktop\netlab\qa-artifacts\types-ports-router-switch.png`
+- Implementação focada: `C:\Users\Fernando\Desktop\netlab\qa-artifacts\types-ports-router-only.png`
+- Comparação lado a lado: `C:\Users\Fernando\Desktop\netlab\qa-artifacts\types-ports-comparison.png`
+- Viewport de inspeção: 1280 × 720
+- Estado: desktop, trilha Tipos de redes ativa
 
-## Full-view comparison evidence
+## Comparação visual
 
-The sidebar keeps its original width, header, scroll behavior, equipment cards, exercise modules, workspace proportions, and visual tokens. The requested `Arquivo / Projeto` section and the `Novo projeto`, `Exportar`, and `Importar` controls are absent. `Biblioteca / Equipamentos` now starts directly below the product header without leaving an empty gap.
-
-## Focused region comparison evidence
-
-The focused 320 × 235 comparison shows the exact changed region. Typography, colors, padding, borders, radii, and existing image assets remain consistent; only the requested project-actions block was removed. No additional focused region was needed because the change is isolated to the top of the sidebar.
+A comparação focada coloca a marcação do usuário e a implementação no mesmo quadro. A coluna de portas ocupa a lateral direita indicada, sem alterar o cartão do roteador. A imagem RJ45 possui transparência real, mantém leitura em tamanho reduzido e é acompanhada por rótulos WAN, L1, L2 e L3. No switch, cinco entradas cabem em uma coluna compacta com rótulos de 1 a 5.
 
 ## Findings
 
-- No actionable P0, P1, or P2 mismatches.
-- Fonts and typography: existing family, weights, hierarchy, and wrapping are preserved.
-- Spacing and layout rhythm: the equipment section advances naturally into the removed block's space.
-- Colors and visual tokens: unchanged.
-- Image quality and asset fidelity: existing equipment images remain sharp and unmodified.
-- Copy and content: only the requested file/project labels and controls were removed.
+- Nenhuma divergência visual P0, P1 ou P2 encontrada.
+- O trilho de portas não cobre nome, status ou imagem dos equipamentos.
+- WAN usa tratamento azul; LAN usa tratamento âmbar; porta ocupada recebe estado cinza.
+- Tipografia, sombras, bordas e raios reaproveitam a linguagem visual existente.
+- O trilho aparece somente na nova trilha; no Modo livre, o roteador manteve os quatro pontos de conexão genéricos e não mostrou portas físicas.
 
-## Interaction and runtime checks
+## Interação e runtime
 
-- Sidebar collapse and reopen controls passed.
-- Equipment and exercise content remained available after reopening.
-- Browser console errors: none.
-- Automated tests: 23 passed.
+- O roteador expôs 1 WAN + 3 LAN.
+- O switch expôs 5 portas.
+- Um cabo criado pela LAN 1 ocupou a porta e terminou visualmente no trilho.
+- Portas ocupadas não podem ser reutilizadas.
+- A Internet só pode entrar pela WAN; computadores e switches usam LAN.
+- Conexões WAN ↔ WAN e LAN ↔ WAN entre roteadores são aceitas somente nesta trilha.
+- O Service Worker informou que o laboratório estava preparado para uso offline.
+- Console do navegador: nenhum erro.
+- Testes automatizados: 31 aprovados após o ajuste final de acessibilidade.
 
-## Comparison history
+## Checklist
 
-- Initial comparison: no P0/P1/P2 findings; no visual correction cycle was required.
-
-## Implementation checklist
-
-- [x] Remove the project-actions markup.
-- [x] Remove obsolete event bindings and exclusive CSS rules.
-- [x] Preserve all remaining sidebar functionality and styling.
-- [x] Verify rendered state and console.
+- [x] Criar imagem RJ45 sem fundo.
+- [x] Posicionar portas ao lado do roteador.
+- [x] Aplicar 3 LAN + 1 WAN no roteador.
+- [x] Aplicar 5 portas no switch.
+- [x] Isolar a mecânica na trilha Tipos de redes.
+- [x] Criar cinco exercícios progressivos de LAN, MAN e WAN.
+- [x] Incluir scripts e imagem no cache offline.
+- [x] Verificar referência e implementação lado a lado.
 
 final result: passed

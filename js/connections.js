@@ -26,17 +26,18 @@
     var pair = [source.type, target.type].sort().join("|");
     var topology = typeof challenge === "string" ? challenge : activeChallenge();
     var allowed = ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
+      || (pair === "router|router" && NetLab.PortModel.isPortChallenge(topology))
       || (pair === "pc|pc" && allowsDirectPcConnection(topology));
     if (allowed) return { allowed: true, message: "" };
     if (source.type === "internet" || target.type === "internet") return { allowed: false, message: "A Internet só pode ser ligada a um Roteador." };
     if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "Conexões diretas entre PCs são permitidas no Primeiro enlace, em Anel, Malha ou Modo livre." };
-    if (source.type === "router" && target.type === "router") return { allowed: false, message: "Conecte cada Roteador à Internet, a um Switch ou a um PC." };
+    if (source.type === "router" && target.type === "router") return { allowed: false, message: "A ligação direta entre roteadores é praticada na trilha Tipos de redes." };
     return { allowed: false, message: "Essa combinação de equipamentos não aceita conexão direta." };
   }
 
   function isPairAllowed(source, target, challenge) { return connectionRule(source, target, challenge).allowed; }
 
-  function add(sourceId, targetId) {
+  function add(sourceId, targetId, sourcePortId, targetPortId) {
     var source = NetLab.State.getNode(sourceId);
     var target = NetLab.State.getNode(targetId);
     if (sourceId === targetId || !source || !target) {
@@ -44,12 +45,26 @@
     }
     var rule = connectionRule(source, target);
     if (!rule.allowed) return { ok: false, message: rule.message, reason: "invalid-type" };
+    var topology = activeChallenge();
+    var portRule = NetLab.PortModel.validateConnection(
+      source,
+      target,
+      sourcePortId || null,
+      targetPortId || null,
+      topology,
+      NetLab.State.data.connections
+    );
+    if (!portRule.allowed) return { ok: false, message: portRule.message, reason: portRule.reason || "invalid-port" };
     if (!canConnectNode(source)) return { ok: false, message: missingCardMessage(source), nodeId: source.id };
     if (!canConnectNode(target)) return { ok: false, message: missingCardMessage(target), nodeId: target.id };
     var key = pairKey(sourceId, targetId);
     var duplicate = NetLab.State.data.connections.some(function (connection) { return pairKey(connection.sourceId, connection.targetId) === key; });
     if (duplicate) return { ok: false, message: "Esses equipamentos já estão conectados." };
     var connection = { id: NetLab.State.createId("cable"), sourceId: sourceId, targetId: targetId, type: "ethernet" };
+    if (NetLab.PortModel.isPortChallenge(topology)) {
+      connection.sourcePortId = sourcePortId || null;
+      connection.targetPortId = targetPortId || null;
+    }
     NetLab.State.data.connections.push(connection);
     NetLab.State.data.selected = { kind: "connection", id: connection.id };
     NetLab.History.record("add-cable");
@@ -74,6 +89,7 @@
     var node = NetLab.State.getNode(nodeId);
     var bus = NetLab.State.getBus(busId);
     if (!node || !bus) return { ok: false, message: "Não foi possível criar a ligação com o barramento." };
+    if (NetLab.PortModel.isPortChallenge(activeChallenge())) return { ok: false, message: "A trilha Tipos de redes usa apenas cabos e portas físicas, sem barramento.", reason: "invalid-type" };
     if (node.type === "internet") return { ok: false, message: "A Internet deve ser ligada diretamente a um Roteador.", reason: "invalid-type" };
     if (!canConnectNode(node)) return { ok: false, message: missingCardMessage(node), nodeId: node.id };
     if (bus.attachments.some(function (attachment) { return attachment.nodeId === nodeId; })) return { ok: false, message: node.name + " já está ligado a este barramento." };
@@ -88,6 +104,9 @@
   }
 
   function nodeCenter(node) { return { x: node.x + node.width / 2, y: node.y + node.height / 2 }; }
+  function endpointPoint(node, portId) {
+    return NetLab.PortModel.endpointPoint(node, portId, activeChallenge());
+  }
   function busPoint(bus, attachment) { return { x: bus.x + bus.width * attachment.offset, y: bus.y + 24 }; }
 
   function smoothPath(start, end) {
@@ -100,7 +119,20 @@
   function connectionPath(connection) {
     var source = NetLab.State.getNode(connection.sourceId);
     var target = NetLab.State.getNode(connection.targetId);
-    return source && target ? smoothPath(nodeCenter(source), nodeCenter(target)) : "";
+    return source && target
+      ? smoothPath(endpointPoint(source, connection.sourcePortId), endpointPoint(target, connection.targetPortId))
+      : "";
+  }
+
+  function storedConnectionAllowed(connection, source, target) {
+    if (!isPairAllowed(source, target) || !canConnectNode(source) || !canConnectNode(target)) return false;
+    return NetLab.PortModel.validatePairPorts(
+      source,
+      target,
+      connection.sourcePortId,
+      connection.targetPortId,
+      activeChallenge()
+    ).allowed;
   }
 
   function attachmentPath(bus, attachment) {
@@ -119,7 +151,7 @@
       if (!adjacency.has(connection.sourceId) || !adjacency.has(connection.targetId)) return;
       var source = NetLab.State.getNode(connection.sourceId);
       var target = NetLab.State.getNode(connection.targetId);
-      if (!isPairAllowed(source, target) || !canConnectNode(source) || !canConnectNode(target)) return;
+      if (!storedConnectionAllowed(connection, source, target)) return;
       adjacency.get(connection.sourceId).push({ id: connection.targetId, edge: { kind: "connection", id: connection.id } });
       adjacency.get(connection.targetId).push({ id: connection.sourceId, edge: { kind: "connection", id: connection.id } });
     });
@@ -179,7 +211,7 @@
     NetLab.State.data.connections.forEach(function (connection) {
       var source = NetLab.State.getNode(connection.sourceId);
       var target = NetLab.State.getNode(connection.targetId);
-      if (!source || !target || !isPairAllowed(source, target)) return;
+      if (!source || !target || !storedConnectionAllowed(connection, source, target)) return;
       if (source.type === "internet" && target.type === "router") onlineRouters.add(target.id);
       if (target.type === "internet" && source.type === "router") onlineRouters.add(source.id);
     });
@@ -217,6 +249,7 @@
     connectionRule: connectionRule,
     isPairAllowed: isPairAllowed,
     nodeCenter: nodeCenter,
+    endpointPoint: endpointPoint,
     busPoint: busPoint,
     smoothPath: smoothPath,
     connectionPath: connectionPath,

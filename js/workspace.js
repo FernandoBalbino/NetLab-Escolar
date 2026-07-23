@@ -65,6 +65,48 @@
     return "Desconectado";
   }
 
+  function physicalPortsEnabled() {
+    return NetLab.PortModel.isPortChallenge(NetLab.State.data.challenge);
+  }
+
+  function addPhysicalPortRail(item, node) {
+    var ports = NetLab.PortModel.portsFor(node, NetLab.State.data.challenge);
+    if (!ports.length) return false;
+    item.dataset.hasPhysicalPorts = "true";
+    var rail = element("div", "device-port-rail device-port-rail--" + node.type);
+    rail.setAttribute("aria-label", "Portas físicas de " + node.name);
+    ports.forEach(function (port) {
+      var occupied = NetLab.PortModel.connectionForPort(NetLab.State.data.connections, node.id, port.id);
+      var button = element("button", "device-port-button device-port-button--" + port.kind + (occupied ? " is-occupied" : ""));
+      button.type = "button";
+      button.dataset.nodeId = node.id;
+      button.dataset.portId = port.id;
+      button.setAttribute("aria-label", node.name + ", porta " + port.label + (occupied ? ", ocupada" : ", livre"));
+      button.setAttribute("aria-pressed", "false");
+      var image = element("img", "device-port-image");
+      image.src = "./assets/images/porta-rj45.png";
+      image.alt = "";
+      image.draggable = false;
+      var label = element("span", "device-port-label");
+      label.textContent = port.kind === "wan" ? "WAN" : port.label.replace("LAN ", "L");
+      button.appendChild(image);
+      button.appendChild(label);
+      button.addEventListener("pointerdown", function (event) {
+        event.stopPropagation();
+      });
+      button.addEventListener("click", function (event) {
+        if (isAnimating) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (NetLab.State.data.tool === "cable") handleCableEndpoint(node.id, port.id);
+        else NetLab.State.select("node", node.id);
+      });
+      rail.appendChild(button);
+    });
+    item.appendChild(rail);
+    return true;
+  }
+
   function closeNetworkCardSlot() {
     if (!openNetworkCardNodeId) return;
     openNetworkCardNodeId = null;
@@ -322,7 +364,8 @@
     item.style.width = node.width + "px";
     item.style.height = node.height + "px";
     item.tabIndex = 0;
-    item.setAttribute("role", node.type === "pc" ? "group" : "button");
+    var exposesPhysicalPorts = physicalPortsEnabled() && NetLab.PortModel.portsFor(node, NetLab.State.data.challenge).length > 0;
+    item.setAttribute("role", node.type === "pc" || exposesPhysicalPorts ? "group" : "button");
     var accessibilityState = statusText(node).toLowerCase();
     item.setAttribute("aria-label", node.name + ", " + accessibilityState);
 
@@ -339,11 +382,14 @@
     item.appendChild(image);
     item.appendChild(label);
     item.appendChild(state);
-    ["top", "right", "bottom", "left"].forEach(function (side) {
-      var port = element("span", "port port--" + side);
-      port.setAttribute("aria-hidden", "true");
-      item.appendChild(port);
-    });
+    var hasPhysicalPorts = exposesPhysicalPorts && addPhysicalPortRail(item, node);
+    if (!hasPhysicalPorts) {
+      ["top", "right", "bottom", "left"].forEach(function (side) {
+        var port = element("span", "port port--" + side);
+        port.setAttribute("aria-hidden", "true");
+        item.appendChild(port);
+      });
+    }
     if (node.type === "pc") {
       var controls = element("div", "pc-control-row");
       item.appendChild(controls);
@@ -453,6 +499,12 @@
       item.classList.toggle("is-cable-source", Boolean(NetLab.State.data.connectionDraft && NetLab.State.data.connectionDraft.sourceId === item.dataset.id));
       item.classList.toggle("is-communication-source", Boolean(NetLab.State.data.communicationDraft && NetLab.State.data.communicationDraft.sourceId === item.dataset.id));
     });
+    els.nodeLayer.querySelectorAll(".device-port-button").forEach(function (button) {
+      var draft = NetLab.State.data.connectionDraft;
+      var active = Boolean(draft && draft.sourceId === button.dataset.nodeId && draft.sourcePortId === button.dataset.portId);
+      button.classList.toggle("is-cable-source", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
     els.busLayer.querySelectorAll(".bus-element").forEach(function (item) {
       item.classList.toggle("is-selected", Boolean(selected && selected.kind === "bus" && selected.id === item.dataset.id));
     });
@@ -504,7 +556,7 @@
     });
   }
 
-  function handleCableNode(nodeId) {
+  function handleCableEndpoint(nodeId, portId) {
     var node = NetLab.State.getNode(nodeId);
     var draft = NetLab.State.data.connectionDraft;
     if (!draft && !NetLab.Connections.canConnectNode(node)) {
@@ -513,13 +565,13 @@
       return;
     }
     if (!draft) {
-      NetLab.State.data.connectionDraft = { sourceId: nodeId };
+      NetLab.State.data.connectionDraft = { sourceId: nodeId, sourcePortId: portId || null };
       NetLab.State.data.selected = { kind: "node", id: nodeId };
       NetLab.State.emit("connection-draft");
-      showHint("Origem selecionada. Escolha outro equipamento ou um barramento.");
+      showHint(portId ? "Porta de origem selecionada. Escolha uma porta ou equipamento de destino." : "Origem selecionada. Escolha outro equipamento ou um barramento.");
       return;
     }
-    var result = NetLab.Connections.add(draft.sourceId, nodeId);
+    var result = NetLab.Connections.add(draft.sourceId, nodeId, draft.sourcePortId, portId || null);
     if (result.ok) {
       NetLab.State.data.connectionDraft = null;
       els.preview.hidden = true;
@@ -536,7 +588,15 @@
     event.stopPropagation();
     var id = event.currentTarget.dataset.id;
     var tool = NetLab.State.data.tool;
-    if (tool === "cable") { handleCableNode(id); return; }
+    if (tool === "cable") {
+      var node = NetLab.State.getNode(id);
+      if (physicalPortsEnabled() && NetLab.PortModel.portsFor(node, NetLab.State.data.challenge).length) {
+        if (NetLab.App) NetLab.App.feedback("info", "Escolha uma porta", "Use uma porta livre ao lado do " + node.name + " para conectar o cabo.");
+        return;
+      }
+      handleCableEndpoint(id, null);
+      return;
+    }
     if (tool === "communication") { NetLab.Communication.handleNode(id); return; }
     if (tool === "pan") { startPan(event); return; }
     if (tool !== "select") return;
@@ -691,7 +751,7 @@
     var source = draft && NetLab.State.getNode(draft.sourceId);
     if (!source) { els.preview.hidden = true; return; }
     var point = worldPoint(clientX, clientY);
-    els.preview.setAttribute("d", NetLab.Connections.smoothPath(NetLab.Connections.nodeCenter(source), point));
+    els.preview.setAttribute("d", NetLab.Connections.smoothPath(NetLab.Connections.endpointPoint(source, draft.sourcePortId), point));
     els.preview.hidden = false;
   }
 

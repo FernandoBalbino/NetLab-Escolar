@@ -22,6 +22,7 @@
   function pairAllowed(source, target, challenge) {
     var pair = [source.type, target.type].sort().join("|");
     return ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
+      || (pair === "router|router" && NetLab.PortModel.isPortChallenge(challenge))
       || (pair === "pc|pc" && ["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0);
   }
 
@@ -84,7 +85,12 @@
       if (connectionPairs.has(pair)) throw new Error("O arquivo contém cabos duplicados.");
       connectionPairs.add(pair);
       connectionIds.add(connection.id);
-      return { id: connection.id, sourceId: connection.sourceId, targetId: connection.targetId, type: "ethernet" };
+      var clean = { id: connection.id, sourceId: connection.sourceId, targetId: connection.targetId, type: "ethernet" };
+      if (NetLab.PortModel.isPortChallenge(challenge)) {
+        clean.sourcePortId = typeof connection.sourcePortId === "string" ? connection.sourcePortId : null;
+        clean.targetPortId = typeof connection.targetPortId === "string" ? connection.targetPortId : null;
+      }
+      return clean;
     });
 
     var busIds = new Set();
@@ -112,9 +118,23 @@
     });
 
     var nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
-    var invalidConnection = connections.find(function (connection) { return !pairAllowed(nodeById.get(connection.sourceId), nodeById.get(connection.targetId), challenge); });
-    if (invalidConnection && strictConnections) throw new Error("O arquivo contém uma conexão entre tipos de equipamentos incompatíveis.");
-    connections = connections.filter(function (connection) { return pairAllowed(nodeById.get(connection.sourceId), nodeById.get(connection.targetId), challenge); });
+    var validConnections = [];
+    connections.forEach(function (connection) {
+      var source = nodeById.get(connection.sourceId);
+      var target = nodeById.get(connection.targetId);
+      var compatible = pairAllowed(source, target, challenge);
+      var portRule = compatible
+        ? NetLab.PortModel.validateConnection(source, target, connection.sourcePortId, connection.targetPortId, challenge, validConnections)
+        : { allowed: false };
+      if (!compatible || !portRule.allowed) {
+        if (strictConnections) {
+          throw new Error(portRule.message || "O arquivo contém uma conexão entre tipos de equipamentos incompatíveis.");
+        }
+        return;
+      }
+      validConnections.push(connection);
+    });
+    connections = validConnections;
     connections.forEach(function (connection) {
       var source = nodeById.get(connection.sourceId);
       var target = nodeById.get(connection.targetId);

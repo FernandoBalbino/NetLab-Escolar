@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "NetLab Escolar — Laboratório de redes",
   "short_name": "NetLab",
-  "description": "Laboratório virtual offline para aprender redes, IPv4, topologias e comunicação.",
+  "description": "Laboratório virtual offline para aprender LAN, MAN, WAN, portas físicas, IPv4, topologias e comunicação.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",
