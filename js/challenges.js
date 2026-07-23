@@ -71,47 +71,52 @@
     "types-lan-ports": {
       module: "types",
       step: 1,
-      name: "As portas da LAN",
-      short: "Descubra quantos equipamentos cabem diretamente no roteador.",
-      objective: "Monte uma LAN com um roteador e três computadores. Instale as placas e ligue cada PC a uma porta LAN diferente. Deixe a porta WAN livre.",
-      minimum: "1 roteador + 3 PCs",
-      success: "Você ocupou corretamente as três portas LAN do roteador."
+      name: "Monte uma LAN",
+      short: "Crie uma rede local completa usando as portas LAN.",
+      objective: "Monte uma LAN com um roteador, um switch e pelo menos dois computadores. Instale as placas e use somente portas LAN entre os equipamentos.",
+      minimum: "Roteador + switch + 2 PCs",
+      success: "Você construiu uma LAN válida usando corretamente as portas locais."
     },
     "types-switch-capacity": {
       module: "types",
       step: 2,
-      name: "Expanda com um switch",
-      short: "Use o switch quando as três portas LAN não forem suficientes.",
-      objective: "Crie uma rede com um roteador, um switch e quatro computadores. Use uma LAN do roteador como uplink e as cinco portas do switch: uma para o roteador e quatro para os PCs.",
-      minimum: "Roteador + switch + 4 PCs",
-      success: "O switch ampliou a LAN e acomodou os quatro computadores."
+      name: "Monte uma MAN",
+      short: "Una duas redes locais que ficam na mesma cidade.",
+      objective: "Crie dois roteadores em Maceió. Cada roteador precisa ter sua própria LAN com pelo menos um computador. Depois, conecte as portas WAN dos roteadores para formar uma MAN.",
+      minimum: "2 roteadores + 2 LANs",
+      success: "Parabéns! Você conectou duas redes locais da mesma cidade e criou uma MAN.",
+      hints: [
+        "Uma MAN conecta redes locais diferentes.",
+        "As duas unidades precisam estar na mesma cidade.",
+        "Configure os dois roteadores como Maceió e conecte um computador a cada rede."
+      ]
     },
     "types-wan-access": {
       module: "types",
       step: 3,
-      name: "A entrada WAN",
-      short: "Separe a entrada da Internet das saídas da rede local.",
-      objective: "Ligue a Internet à porta WAN de um roteador e conecte dois computadores a portas LAN diferentes.",
-      minimum: "Internet + roteador + 2 PCs",
-      success: "Você separou corretamente a WAN das conexões LAN."
+      name: "Transforme MAN em WAN",
+      short: "Mude a localização de uma das redes já montadas.",
+      objective: "A rede começou como uma MAN em Maceió. Selecione um dos roteadores e altere sua cidade para Arapiraca. A ligação deve passar a ser classificada como WAN, sem MAN.",
+      minimum: "Altere a cidade de 1 roteador",
+      success: "Ao separar as LANs entre Maceió e Arapiraca, você transformou a MAN em WAN."
     },
     "types-man-link": {
       module: "types",
       step: 4,
-      name: "Duas LANs, uma MAN",
-      short: "Una duas redes locais por um enlace entre roteadores.",
-      objective: "Use dois roteadores e dois computadores. Crie uma LAN em cada lado e represente a MAN ligando a porta WAN de um roteador à WAN do outro.",
-      minimum: "2 roteadores + 2 PCs",
-      success: "As duas LANs agora estão unidas por um enlace MAN."
+      name: "LAN conectada à Internet",
+      short: "Use a entrada WAN sem transformar a rede local em MAN.",
+      objective: "Monte uma LAN válida e ligue a Internet à porta WAN do roteador. A análise deve identificar LAN e WAN, mas não MAN.",
+      minimum: "Internet + LAN completa",
+      success: "A LAN chegou à Internet pela porta WAN, sem ser confundida com uma MAN."
     },
     "types-complete": {
       module: "types",
       step: 5,
-      name: "LAN, MAN e WAN",
-      short: "Combine os três alcances em uma única infraestrutura.",
-      objective: "Monte Internet → WAN do roteador principal → LAN para a WAN do segundo roteador → LAN para um switch. Deixe um PC no roteador principal e conecte outros três ao switch.",
-      minimum: "Internet + 2 roteadores + switch + 4 PCs",
-      success: "Você combinou WAN, enlace entre redes e duas LANs usando as portas certas."
+      name: "Identifique a classificação",
+      short: "Leia três redes prontas e reconheça seus alcances.",
+      objective: "Observe cada cenário pronto no espaço de trabalho e escolha sua classificação: LAN, LAN + MAN ou LAN + WAN. Acerte os três cenários para concluir.",
+      minimum: "Classifique 3 cenários",
+      success: "Você reconheceu corretamente LAN, MAN e WAN a partir da estrutura e da localização."
     },
     star: { module: "topologies", name: "Estrela", short: "Um switch no centro conecta os computadores da LAN.", objective: "Conecte três ou mais PCs ao mesmo switch. Se usar Internet, siga Internet → Roteador → Switch central.", minimum: "1 switch + 3 PCs" },
     bus: { module: "topologies", name: "Barramento", short: "Todos os computadores compartilham uma linha principal.", objective: "Adicione um barramento e ligue pelo menos três computadores aos seus pontos.", minimum: "1 barramento + 3 PCs" },
@@ -143,7 +148,77 @@
     NetLab.State.data.connectionDraft = null;
     NetLab.State.data.communicationDraft = null;
     NetLab.State.data.communicationProof = null;
+    NetLab.State.data.challengeData = null;
     NetLab.State.data.tool = "select";
+  }
+
+  function seedNode(id, type, name, x, y, city) {
+    var dimensions = { pc: [142, 158], switch: [154, 124], router: [170, 148], internet: [142, 130] }[type];
+    return {
+      id: id,
+      type: type,
+      name: name,
+      x: x,
+      y: y,
+      width: dimensions[0],
+      height: dimensions[1],
+      status: "disconnected",
+      hasNetworkCard: type === "pc" ? true : undefined,
+      city: type === "router" ? NetLab.NetworkScope.sanitizeCity(city) : undefined,
+      ipv4: type === "pc" ? { address: "", mask: "", gateway: "" } : undefined
+    };
+  }
+
+  function seedCable(id, sourceId, targetId, sourcePortId, targetPortId) {
+    return { id: id, sourceId: sourceId, targetId: targetId, sourcePortId: sourcePortId || null, targetPortId: targetPortId || null, type: "ethernet" };
+  }
+
+  function manSeed(firstCity, secondCity) {
+    return {
+      nodes: [
+        seedNode("lesson-router-a", "router", "Roteador A", 610, 300, firstCity),
+        seedNode("lesson-router-b", "router", "Roteador B", 1120, 300, secondCity),
+        seedNode("lesson-pc-a", "pc", "PC da rede A", 620, 580),
+        seedNode("lesson-pc-b", "pc", "PC da rede B", 1140, 580)
+      ],
+      connections: [
+        seedCable("lesson-lan-a", "lesson-router-a", "lesson-pc-a", "lan-1", null),
+        seedCable("lesson-lan-b", "lesson-router-b", "lesson-pc-b", "lan-1", null),
+        seedCable("lesson-city-link", "lesson-router-a", "lesson-router-b", "wan", "wan")
+      ]
+    };
+  }
+
+  function quizSeed(index) {
+    if (index === 1) return manSeed("maceio", "maceio");
+    if (index === 2) return manSeed("maceio", "arapiraca");
+    return {
+      nodes: [
+        seedNode("quiz-router", "router", "Roteador da escola", 870, 270, "maceio"),
+        seedNode("quiz-switch", "switch", "Switch da sala", 880, 500),
+        seedNode("quiz-pc-a", "pc", "PC 1", 650, 720),
+        seedNode("quiz-pc-b", "pc", "PC 2", 1100, 720)
+      ],
+      connections: [
+        seedCable("quiz-uplink", "quiz-router", "quiz-switch", "lan-1", "port-1"),
+        seedCable("quiz-pc-link-a", "quiz-switch", "quiz-pc-a", "port-2", null),
+        seedCable("quiz-pc-link-b", "quiz-switch", "quiz-pc-b", "port-3", null)
+      ]
+    };
+  }
+
+  function installSeed(seed) {
+    NetLab.State.data.nodes = seed.nodes;
+    NetLab.State.data.connections = seed.connections;
+    NetLab.State.data.buses = [];
+  }
+
+  function seedChallenge(id) {
+    if (id === "types-wan-access") installSeed(manSeed("maceio", "maceio"));
+    if (id === "types-complete") {
+      NetLab.State.data.challengeData = { quizScenario: 0, quizComplete: false, lastAnswer: null };
+      installSeed(quizSeed(0));
+    }
   }
 
   function start(id) {
@@ -151,14 +226,17 @@
     clearWorkspace();
     NetLab.State.data.challenge = id;
     NetLab.State.data.hintsUsed = 0;
+    seedChallenge(id);
     NetLab.History.record("start-challenge");
     NetLab.State.emit("start-challenge");
     return true;
   }
 
   function restart() {
+    var id = NetLab.State.data.challenge;
     clearWorkspace();
     NetLab.State.data.hintsUsed = 0;
+    seedChallenge(id);
     NetLab.History.record("restart-challenge");
     NetLab.State.emit("restart-challenge");
   }
@@ -201,8 +279,9 @@
     if (id === "free") return { message: "Escolha um exercício para receber dicas específicas.", score: null };
     var validation = validate(id, NetLab.State.captureProject());
     if (validation.valid) return { message: "Seu exercício parece pronto. Clique em Verificar!", score: score() };
-    var index = Math.min(NetLab.State.data.hintsUsed, Math.max(0, validation.hints.length - 1));
-    var message = validation.hints[index] || "Observe as conexões e compare com o objetivo do exercício.";
+    var availableHints = (definitions[id].hints && definitions[id].hints.length) ? definitions[id].hints : validation.hints;
+    var index = Math.min(NetLab.State.data.hintsUsed, Math.max(0, availableHints.length - 1));
+    var message = availableHints[index] || "Observe as conexões e compare com o objetivo do exercício.";
     if (NetLab.State.data.hintsUsed < 5) NetLab.State.data.hintsUsed += 1;
     NetLab.State.emit("hint");
     return { message: message, score: score() };
@@ -221,6 +300,29 @@
     return true;
   }
 
+  function submitClassificationAnswer(answer) {
+    if (NetLab.State.data.challenge !== "types-complete" || !NetLab.State.data.challengeData) {
+      return { correct: false, complete: false, message: "Inicie o exercício Identifique a classificação." };
+    }
+    var data = NetLab.State.data.challengeData;
+    var expected = ["LAN", "LAN+MAN", "LAN+WAN"][data.quizScenario];
+    data.lastAnswer = answer;
+    if (answer !== expected) {
+      NetLab.State.emit("classification-answer");
+      return { correct: false, complete: false, expected: expected, message: "Observe a cidade dos roteadores e quais redes estão realmente conectadas." };
+    }
+    if (data.quizScenario < 2) {
+      data.quizScenario += 1;
+      data.lastAnswer = null;
+      installSeed(quizSeed(data.quizScenario));
+      NetLab.State.emit("classification-scenario");
+      return { correct: true, complete: false, nextScenario: data.quizScenario, message: "Correto! Analise agora o próximo cenário." };
+    }
+    data.quizComplete = true;
+    NetLab.State.emit("classification-answer");
+    return { correct: true, complete: true, message: "Os três cenários foram classificados corretamente. Clique em Verificar para concluir." };
+  }
+
   NetLab.Challenges = {
     order: order,
     modules: listModules,
@@ -233,6 +335,7 @@
     restart: restart,
     validateCurrent: validateCurrent,
     askHint: askHint,
+    submitClassificationAnswer: submitClassificationAnswer,
     recordCommunicationSuccess: recordCommunicationSuccess
   };
 }());

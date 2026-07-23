@@ -6,6 +6,7 @@
   "./js/history.js",
   "./js/ipv4.js",
   "./js/port-model.js",
+  "./js/network-scope.js",
   "./js/storage.js",
   "./js/devices.js",
   "./js/connections.js",

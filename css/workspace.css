@@ -55,6 +55,15 @@
 .connection-path.is-selected, .attachment-path.is-selected { stroke: var(--blue-600); stroke-width: 6; filter: drop-shadow(0 0 5px rgba(37, 99, 235, .4)); }
 .connection-path.is-route, .attachment-path.is-route { stroke: var(--blue-500); stroke-width: 7; filter: drop-shadow(0 0 6px rgba(37, 99, 235, .55)); }
 .connection-path.is-route-error, .attachment-path.is-route-error { stroke: #dc2626; stroke-width: 7; filter: drop-shadow(0 0 6px rgba(220, 38, 38, .55)); }
+.connection-scope-label {
+  fill: var(--blue-700);
+  stroke: white;
+  stroke-width: 4px;
+  paint-order: stroke fill;
+  font-size: 13px;
+  font-weight: 900;
+  pointer-events: none;
+}
 .cable-preview { fill: none; stroke: var(--blue-500); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 7; pointer-events: none; animation: dash 700ms linear infinite; }
 .packet { fill: var(--blue-600); stroke: white; stroke-width: 3; filter: drop-shadow(0 3px 5px rgba(37, 99, 235, .45)); pointer-events: none; }
 .packet.is-error { fill: #dc2626; filter: drop-shadow(0 3px 6px rgba(220, 38, 38, .55)); }
@@ -87,7 +96,7 @@
 .network-node.is-communication-source { border-color: #7c3aed; box-shadow: 0 0 0 6px rgba(124, 58, 237, .12); }
 .node-image { display: block; flex: 0 0 auto; width: 92px; height: 60px; object-fit: contain; image-rendering: auto; pointer-events: none; -webkit-user-drag: none; }
 .network-node[data-type="switch"] .node-image { width: 122px; height: 54px; margin-top: 1px; }
-.network-node[data-type="router"] .node-image { width: 142px; height: 82px; }
+.network-node[data-type="router"] .node-image { width: 132px; height: 66px; }
 .network-node[data-type="internet"] .node-image { width: 64px; height: 64px; }
 .node-label { display: block; flex: 0 0 auto; width: 100%; min-height: 16px; overflow: hidden; color: var(--ink-900); font-size: 12px; font-weight: 800; line-height: 16px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .node-state { display: flex; flex: 0 0 auto; align-items: center; min-height: 13px; gap: 4px; color: var(--ink-500); font-size: 9px; font-weight: 700; line-height: 13px; }
@@ -98,6 +107,7 @@
 .network-node.is-no-internet .node-state::before { background: #f59e0b; box-shadow: 0 0 0 1px #f4bd59; }
 .network-node.needs-network-card .node-state { color: #b45309; }
 .network-node.needs-network-card .node-state::before { background: #f59e0b; box-shadow: 0 0 0 1px #f4bd59; }
+.node-city { color: var(--blue-700); font-size: 9px; font-weight: 800; line-height: 12px; }
 .port { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid var(--blue-500); border-radius: 50%; opacity: 0; transition: opacity 150ms ease; }
 .network-node:hover .port, .network-node.is-selected .port, .workspace[data-tool="cable"] .port { opacity: 1; }
 .network-node.needs-network-card .port { opacity: 0 !important; }

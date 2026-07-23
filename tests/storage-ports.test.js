@@ -16,6 +16,7 @@ function loadScript(name) {
 loadScript("state.js");
 loadScript("ipv4.js");
 loadScript("port-model.js");
+loadScript("network-scope.js");
 loadScript("storage.js");
 
 const NetLab = context.window.NetLab;
@@ -46,6 +47,7 @@ test("preserva as portas físicas ao sanitizar um projeto", () => {
   }));
   assert.equal(sanitized.connections[0].sourcePortId, "lan-1");
   assert.equal(sanitized.connections[0].targetPortId, null);
+  assert.equal(sanitized.nodes[0].city, "maceio");
 });
 
 test("rejeita projeto da trilha que não informa a porta do roteador", () => {

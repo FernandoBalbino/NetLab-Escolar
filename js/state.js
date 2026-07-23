@@ -41,6 +41,7 @@
     connections: [],
     buses: [],
     challenge: "free",
+    challengeData: null,
     hintsUsed: 0,
     zoom: 1,
     pan: { x: 0, y: 0 },
@@ -85,6 +86,7 @@
       connections: state.connections,
       buses: state.buses,
       challenge: state.challenge,
+      challengeData: state.challengeData,
       hintsUsed: state.hintsUsed,
       zoom: state.zoom,
       pan: state.pan
@@ -96,6 +98,7 @@
     state.connections = clone(project.connections || []);
     state.buses = clone(project.buses || []);
     state.challenge = challengeIds.indexOf(project.challenge) >= 0 ? project.challenge : "free";
+    state.challengeData = project.challengeData ? clone(project.challengeData) : null;
     state.hintsUsed = Math.max(0, Number(project.hintsUsed) || 0);
     state.zoom = Math.min(2, Math.max(.4, Number(project.zoom) || 1));
     state.pan = project.pan && Number.isFinite(project.pan.x) && Number.isFinite(project.pan.y)

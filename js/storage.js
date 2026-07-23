@@ -29,6 +29,7 @@
   function sanitizeProject(project, options) {
     var strictConnections = !options || options.strictConnections !== false;
     if (!project || typeof project !== "object") throw new Error("O arquivo não contém um projeto válido.");
+    if (NetLab.NetworkScope) project = NetLab.NetworkScope.migrateLegacyNetworkState(project);
     if (!Array.isArray(project.nodes) || !Array.isArray(project.connections) || !Array.isArray(project.buses)) {
       throw new Error("A estrutura de equipamentos, cabos ou barramentos é inválida.");
     }
@@ -71,6 +72,7 @@
         height: height,
         status: ["disconnected", "no-internet", "connected"].indexOf(node.status) >= 0 ? node.status : "disconnected",
         hasNetworkCard: hasNetworkCard,
+        city: node.type === "router" ? (NetLab.NetworkScope ? NetLab.NetworkScope.sanitizeCity(node.city) : (node.city || "maceio")) : undefined,
         ipv4: node.type === "pc" ? NetLab.IPv4.sanitize(node.ipv4) : undefined
       };
     });
@@ -157,6 +159,13 @@
       connections: connections,
       buses: buses,
       challenge: challenge,
+      challengeData: challenge === "types-complete" && project.challengeData && typeof project.challengeData === "object"
+        ? {
+          quizScenario: Math.max(0, Math.min(2, finite(project.challengeData.quizScenario, 0))),
+          quizComplete: Boolean(project.challengeData.quizComplete),
+          lastAnswer: typeof project.challengeData.lastAnswer === "string" ? project.challengeData.lastAnswer.slice(0, 16) : null
+        }
+        : null,
       hintsUsed: Math.max(0, Math.min(5, finite(project.hintsUsed, 0))),
       zoom: NetLab.State.clamp(finite(project.zoom, 1), .4, 2),
       pan: {
@@ -171,7 +180,11 @@
     var rawProgress = safeGet(KEYS.progress);
     var rawPreferences = safeGet(KEYS.preferences);
     if (rawProject) {
-      try { NetLab.State.restoreProject(sanitizeProject(JSON.parse(rawProject), { strictConnections: false }), "load"); } catch (error) { console.warn("Projeto salvo ignorado:", error.message); }
+      try {
+        var loadedProject = sanitizeProject(JSON.parse(rawProject), { strictConnections: false });
+        NetLab.State.restoreProject(loadedProject, "load");
+        safeSet(KEYS.project, JSON.stringify(loadedProject));
+      } catch (error) { console.warn("Projeto salvo ignorado:", error.message); }
     }
     if (rawProgress) {
       try { NetLab.State.data.progress = NetLab.State.mergeProgress(JSON.parse(rawProgress)); } catch (error) { console.warn("Progresso salvo ignorado."); }

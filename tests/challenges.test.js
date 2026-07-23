@@ -17,6 +17,7 @@ loadScript("state.js");
 const NetLab = context.window.NetLab;
 NetLab.History = { record() {} };
 NetLab.Storage = { saveNow() {} };
+NetLab.NetworkScope = { sanitizeCity(city) { return city === "arapiraca" ? city : "maceio"; } };
 NetLab.NetworkBasicsValidator = {
   validate(id) { return { valid: true, topology: id, challengeId: id, hints: [], details: {} }; },
   signature() { return "signature"; }
@@ -54,4 +55,23 @@ test("mantém progressões independentes para as três trilhas", () => {
   assert.equal(NetLab.State.data.progress.completed.star, true);
   assert.equal(NetLab.Challenges.isUnlocked("bus"), true);
   assert.equal(NetLab.Challenges.isUnlocked("ring"), false);
+});
+
+test("semeia os cenários prontos e avança o quiz de classificação", () => {
+  NetLab.State.data.progress.unlocked.push("types-complete");
+  assert.equal(NetLab.Challenges.start("types-complete"), true);
+  assert.equal(NetLab.State.data.challengeData.quizScenario, 0);
+  assert.equal(NetLab.State.data.nodes.length, 4);
+
+  assert.equal(NetLab.Challenges.submitClassificationAnswer("LAN").correct, true);
+  assert.equal(NetLab.State.data.challengeData.quizScenario, 1);
+  assert.equal(NetLab.State.data.nodes.filter((node) => node.type === "router").length, 2);
+
+  assert.equal(NetLab.Challenges.submitClassificationAnswer("LAN+MAN").correct, true);
+  assert.equal(NetLab.State.data.challengeData.quizScenario, 2);
+  assert.deepEqual(Array.from(new Set(NetLab.State.data.nodes.filter((node) => node.type === "router").map((node) => node.city))).sort(), ["arapiraca", "maceio"]);
+
+  const result = NetLab.Challenges.submitClassificationAnswer("LAN+WAN");
+  assert.equal(result.complete, true);
+  assert.equal(NetLab.State.data.challengeData.quizComplete, true);
 });

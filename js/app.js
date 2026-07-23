@@ -154,7 +154,8 @@
     var row = inspector.querySelector(".rename-row");
     var label = document.getElementById("rename-label");
     var input = document.getElementById("rename-input");
-    if (!selected) { inspector.hidden = true; return; }
+    var cityRow = document.getElementById("router-city-row");
+    if (!selected) { inspector.hidden = true; cityRow.hidden = true; return; }
     inspector.hidden = false;
     var node = selected.kind === "node" ? NetLab.State.getNode(selected.id) : null;
     row.hidden = !node;
@@ -163,6 +164,8 @@
       document.getElementById("inspector-title").textContent = { pc: "Computador", switch: "Switch", router: "Roteador", internet: "Internet" }[node.type] || "Equipamento";
       if (document.activeElement !== input) input.value = node.name;
     } else document.getElementById("inspector-title").textContent = selected.kind === "bus" ? "Barramento" : "Cabo";
+    cityRow.hidden = !(node && node.type === "router");
+    if (node && node.type === "router") document.getElementById("router-city").value = NetLab.NetworkScope.sanitizeCity(node.city);
   }
 
   function renderActiveChallenge() {
@@ -173,6 +176,48 @@
     document.getElementById("score-badge").textContent = definition ? NetLab.Challenges.score() + " pts" : "—";
     document.getElementById("ask-hint").disabled = !definition;
     document.getElementById("status-challenge").textContent = definition ? "Desafio: " + definition.name : "Modo livre";
+    var quiz = document.getElementById("classification-quiz");
+    var isQuiz = id === "types-complete" && NetLab.State.data.challengeData;
+    quiz.hidden = !isQuiz;
+    if (isQuiz) {
+      var data = NetLab.State.data.challengeData;
+      document.getElementById("classification-scenario").textContent = "Cenário " + ["A", "B", "C"][data.quizScenario] + " de 3";
+      document.getElementById("classification-submit").disabled = Boolean(data.quizComplete);
+      document.getElementById("classification-answer").disabled = Boolean(data.quizComplete);
+      document.getElementById("classification-message").textContent = data.quizComplete
+        ? "Três respostas corretas. Clique em Verificar para concluir."
+        : "Observe os equipamentos, as portas e as cidades antes de responder.";
+    }
+  }
+
+  function setScopeResult(id, active, text) {
+    var item = document.getElementById(id);
+    item.classList.toggle("is-detected", active);
+    item.querySelector("span").textContent = text;
+  }
+
+  function renderNetworkAnalysis() {
+    var section = document.getElementById("network-analysis");
+    var visible = NetLab.Challenges.moduleFor(NetLab.State.data.challenge) === "types";
+    section.hidden = !visible;
+    if (!visible) return;
+    var analysis = NetLab.NetworkScope.classifyNetworkScope(NetLab.State.captureProject());
+    var validLans = analysis.validLocalNetworks;
+    setScopeResult("scope-lan", analysis.hasLAN, analysis.hasLAN
+      ? (validLans.length === 1
+        ? validLans[0].deviceIds.length + " dispositivos na rede local" + (validLans[0].routerId ? " do " + NetLab.State.getNode(validLans[0].routerId).name : "")
+        : validLans.length + " redes locais válidas")
+      : "Conecte um equipamento final a um roteador ou switch");
+    setScopeResult("scope-man", analysis.hasMAN, analysis.hasMAN
+      ? analysis.metropolitanLinks.map(function (link) { return link.label; }).join(" · ")
+      : "Exige duas LANs conectadas na mesma cidade");
+    setScopeResult("scope-wan", analysis.hasWAN, analysis.hasWAN
+      ? analysis.wideAreaLinks.map(function (link) { return link.label; }).join(" · ")
+      : "Exige Internet na WAN ou LANs conectadas entre cidades");
+    document.getElementById("network-analysis-summary").textContent = analysis.classifications.join(" + ") || "Nenhuma";
+    var warning = document.getElementById("network-analysis-warning");
+    warning.hidden = !analysis.warnings.length;
+    warning.textContent = analysis.warnings.slice(0, 2).join(" ");
   }
 
   function renderToolbar() {
@@ -202,6 +247,7 @@
     renderProgress();
     renderInspector();
     renderActiveChallenge();
+    renderNetworkAnalysis();
     renderToolbar();
     renderSidebarState();
   }
@@ -365,6 +411,20 @@
     });
     document.getElementById("rename-input").addEventListener("keydown", function (event) {
       if (event.key === "Enter") { event.preventDefault(); document.getElementById("rename-save").click(); event.currentTarget.blur(); }
+    });
+    document.getElementById("router-city").addEventListener("change", function (event) {
+      var selected = NetLab.State.data.selected;
+      if (selected && selected.kind === "node") NetLab.Devices.setRouterCity(selected.id, event.currentTarget.value);
+    });
+    document.getElementById("classification-submit").addEventListener("click", function () {
+      var select = document.getElementById("classification-answer");
+      if (!select.value) {
+        feedback("warning", "Escolha uma resposta", "Selecione LAN, LAN + MAN ou LAN + WAN.");
+        return;
+      }
+      var result = NetLab.Challenges.submitClassificationAnswer(select.value);
+      select.value = "";
+      feedback(result.correct ? "success" : "warning", result.correct ? "Classificação correta" : "Revise o cenário", result.message);
     });
     document.getElementById("inspector-delete").addEventListener("click", function () { NetLab.Devices.removeSelected(); });
     document.getElementById("feedback-close").addEventListener("click", hideFeedback);

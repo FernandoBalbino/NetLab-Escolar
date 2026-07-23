@@ -9,9 +9,9 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="./assets/images/icone-192.png">
   <link rel="apple-touch-icon" href="./assets/images/icone-192.png">
-  <link rel="stylesheet" href="./css/style.css?v=20260723-1">
-  <link rel="stylesheet" href="./css/workspace.css?v=20260723-1">
-  <link rel="stylesheet" href="./css/responsive.css?v=20260723-1">
+  <link rel="stylesheet" href="./css/style.css?v=20260723-3">
+  <link rel="stylesheet" href="./css/workspace.css?v=20260723-3">
+  <link rel="stylesheet" href="./css/responsive.css?v=20260723-3">
 </head>
 <body>
   <a class="skip-link" href="#workspace">Ir para a área de trabalho</a>
@@ -151,11 +151,41 @@
             <span id="score-badge" class="score-badge">—</span>
           </div>
           <p id="active-challenge-description">Monte qualquer rede e use a verificação para identificar a topologia.</p>
+          <div id="classification-quiz" class="classification-quiz" hidden>
+            <strong id="classification-scenario">Cenário A de 3</strong>
+            <label for="classification-answer">Qual é a classificação?</label>
+            <div class="classification-answer-row">
+              <select id="classification-answer">
+                <option value="">Selecione</option>
+                <option value="LAN">LAN</option>
+                <option value="MAN">MAN</option>
+                <option value="WAN">WAN</option>
+                <option value="LAN+MAN">LAN + MAN</option>
+                <option value="LAN+WAN">LAN + WAN</option>
+                <option value="LAN+MAN+WAN">LAN + MAN + WAN</option>
+              </select>
+              <button id="classification-submit" class="primary-button" type="button">Responder</button>
+            </div>
+            <p id="classification-message" class="classification-message" aria-live="polite"></p>
+          </div>
           <div class="challenge-actions">
             <button id="ask-hint" class="secondary-button" type="button" aria-label="Pedir dica do desafio">Pedir dica</button>
             <button id="restart-challenge" class="secondary-button" type="button" aria-label="Reiniciar desafio">Reiniciar</button>
             <button id="verify-challenge" class="primary-button" type="button" aria-label="Verificar desafio atual">Verificar</button>
           </div>
+        </section>
+
+        <section id="network-analysis" class="side-section network-analysis" aria-labelledby="network-analysis-title" hidden>
+          <div class="section-heading">
+            <div><span class="eyebrow">Leitura automática</span><h2 id="network-analysis-title">Análise da rede</h2></div>
+            <span id="network-analysis-summary" class="count-badge">—</span>
+          </div>
+          <div class="scope-list" aria-live="polite">
+            <div id="scope-lan" class="scope-item"><strong>LAN</strong><span>Ainda não identificada</span></div>
+            <div id="scope-man" class="scope-item"><strong>MAN</strong><span>Ainda não identificada</span></div>
+            <div id="scope-wan" class="scope-item"><strong>WAN</strong><span>Ainda não identificada</span></div>
+          </div>
+          <p id="network-analysis-warning" class="analysis-warning" hidden></p>
         </section>
 
         <section class="side-section" aria-labelledby="progress-title">
@@ -173,6 +203,14 @@
           <div class="rename-row">
             <input id="rename-input" maxlength="32" autocomplete="off">
             <button id="rename-save" class="primary-button" type="button" aria-label="Salvar nome do equipamento">Salvar</button>
+          </div>
+          <div id="router-city-row" class="router-city-row" hidden>
+            <label for="router-city">Cidade do roteador</label>
+            <select id="router-city">
+              <option value="maceio">Maceió</option>
+              <option value="arapiraca">Arapiraca</option>
+            </select>
+            <small>Computadores e switches conectados à LAN herdam esta localização.</small>
           </div>
           <button id="inspector-delete" class="danger-button" type="button" aria-label="Excluir item selecionado">Excluir selecionado</button>
         </section>
@@ -232,21 +270,22 @@
     </section>
   </div>
 
-  <script defer src="./js/state.js?v=20260723-1"></script>
-  <script defer src="./js/history.js?v=20260723-1"></script>
-  <script defer src="./js/ipv4.js?v=20260723-1"></script>
-  <script defer src="./js/port-model.js?v=20260723-1"></script>
-  <script defer src="./js/storage.js?v=20260723-1"></script>
-  <script defer src="./js/devices.js?v=20260723-1"></script>
-  <script defer src="./js/connections.js?v=20260723-1"></script>
-  <script defer src="./js/topology-validator.js?v=20260723-1"></script>
-  <script defer src="./js/network-basics-validator.js?v=20260723-1"></script>
-  <script defer src="./js/network-types-validator.js?v=20260723-1"></script>
-  <script defer src="./js/challenges.js?v=20260723-1"></script>
-  <script defer src="./js/communication-test.js?v=20260723-1"></script>
-  <script defer src="./js/tutorial.js?v=20260723-1"></script>
-  <script defer src="./js/workspace.js?v=20260723-1"></script>
-  <script defer src="./js/app.js?v=20260723-1"></script>
-  <script defer src="./js/pwa.js?v=20260723-1"></script>
+  <script defer src="./js/state.js?v=20260723-3"></script>
+  <script defer src="./js/history.js?v=20260723-3"></script>
+  <script defer src="./js/ipv4.js?v=20260723-3"></script>
+  <script defer src="./js/port-model.js?v=20260723-3"></script>
+  <script defer src="./js/network-scope.js?v=20260723-3"></script>
+  <script defer src="./js/storage.js?v=20260723-3"></script>
+  <script defer src="./js/devices.js?v=20260723-3"></script>
+  <script defer src="./js/connections.js?v=20260723-3"></script>
+  <script defer src="./js/topology-validator.js?v=20260723-3"></script>
+  <script defer src="./js/network-basics-validator.js?v=20260723-3"></script>
+  <script defer src="./js/network-types-validator.js?v=20260723-3"></script>
+  <script defer src="./js/challenges.js?v=20260723-3"></script>
+  <script defer src="./js/communication-test.js?v=20260723-3"></script>
+  <script defer src="./js/tutorial.js?v=20260723-3"></script>
+  <script defer src="./js/workspace.js?v=20260723-3"></script>
+  <script defer src="./js/app.js?v=20260723-3"></script>
+  <script defer src="./js/pwa.js?v=20260723-3"></script>
 </body>
 </html>

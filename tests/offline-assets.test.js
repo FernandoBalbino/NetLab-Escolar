@@ -14,8 +14,8 @@ test("todos os recursos do precache existem localmente", () => {
   });
 });
 
-test("a nova trilha e o ícone das portas funcionam offline", () => {
-  ["./js/port-model.js", "./js/network-types-validator.js", "./assets/images/porta-rj45.png"].forEach((entry) => {
+test("a nova trilha, a análise geográfica e o ícone das portas funcionam offline", () => {
+  ["./js/port-model.js", "./js/network-scope.js", "./js/network-types-validator.js", "./assets/images/porta-rj45.png"].forEach((entry) => {
     assert.equal(manifest.includes(entry), true, `faltou no precache: ${entry}`);
   });
 });

@@ -35,6 +35,7 @@ NetLab-Escolar/
     ├── state.js
     ├── history.js
     ├── port-model.js
+    ├── network-scope.js
     ├── storage.js
     ├── devices.js
     ├── connections.js
@@ -96,10 +97,12 @@ O teste de comunicação usa busca em largura (BFS) para encontrar um caminho en
 Os exercícios ficam recolhidos em três módulos que podem ser abertos separadamente:
 
 - **Redes básicas:** cinco etapas progressivas — conexão direta entre dois PCs, rede com switch, LAN com três PCs, roteador na borda e caminho completo até a Internet.
-- **Tipos de redes:** cinco etapas para praticar LAN, expansão por switch, entrada WAN, enlace MAN e uma infraestrutura combinando LAN/MAN/WAN. Somente nessa trilha o roteador expõe 3 portas LAN + 1 WAN e o switch expõe 5 portas; cada cabo ocupa uma porta livre.
+- **Tipos de redes:** cinco etapas para montar uma LAN, unir duas LANs de Maceió em uma MAN, transformar a MAN em WAN ao mover uma unidade para Arapiraca, conectar uma LAN à Internet e classificar três cenários prontos. Somente nessa trilha o roteador expõe 3 portas LAN + 1 WAN e o switch expõe 5 portas; cada cabo ocupa uma porta livre.
 - **Topologias:** Estrela, Barramento, Anel, Malha e Árvore.
 
 Na trilha de redes básicas, cada computador precisa de placa de rede, endereço IPv4 único e máscara compatível. A etapa só é concluída depois que o aluno executa **Testar comunicação** com sucesso e verifica o exercício. Alterar cabos ou configurações depois do teste invalida essa comprovação e exige um novo envio de pacote.
+
+Na trilha de tipos de redes, cada roteador pode representar Maceió ou Arapiraca. Computadores e switches herdam a cidade do roteador responsável por sua LAN. O analisador em `js/network-scope.js` só reconhece MAN ou WAN geográfica quando existem LANs próprias válidas e conectadas; a Internet só representa WAN quando entra pela porta WAN de um roteador que possui uma LAN interna.
 
 ## Como criar um novo desafio
 
@@ -161,6 +164,6 @@ O NetLab Escolar é uma PWA instalável. Depois do primeiro acesso completo pelo
 
 No Chrome ou Chromebook, abra o site e use o ícone **Instalar** na barra de endereço. Depois da instalação, o laboratório abre sem internet e mantém projetos, progresso e preferências no `localStorage` do dispositivo.
 
-O cache atual é `netlab-offline-v2`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
+O cache atual é `netlab-offline-v6`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
 
 Não altere os caminhos relativos nem mova o `index.html` para fora da raiz publicada.

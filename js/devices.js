@@ -32,6 +32,7 @@
       width: width,
       height: height,
       status: "disconnected",
+      city: type === "router" ? NetLab.NetworkScope.DEFAULT_CITY : undefined,
       hasNetworkCard: type === "pc" ? false : undefined,
       ipv4: type === "pc" ? NetLab.IPv4.defaultConfiguration() : undefined
     };
@@ -67,6 +68,16 @@
     node.name = clean;
     NetLab.History.record("rename");
     NetLab.State.emit("rename");
+    return true;
+  }
+
+  function setRouterCity(id, city) {
+    var router = NetLab.State.getNode(id);
+    var clean = NetLab.NetworkScope.sanitizeCity(city);
+    if (!router || router.type !== "router" || city !== clean || router.city === clean) return false;
+    router.city = clean;
+    NetLab.History.record("set-router-city");
+    NetLab.State.emit("set-router-city");
     return true;
   }
 
@@ -166,5 +177,5 @@
     return definition ? { width: definition.width, height: definition.height } : null;
   }
 
-  NetLab.Devices = { add: add, addBus: addBus, renameNode: renameNode, installNetworkCard: installNetworkCard, configureIPv4: configureIPv4, clearIPv4: clearIPv4, removeNode: removeNode, removeBus: removeBus, removeSelected: removeSelected, clearCanvas: clearCanvas, dimensionsFor: dimensionsFor };
+  NetLab.Devices = { add: add, addBus: addBus, renameNode: renameNode, setRouterCity: setRouterCity, installNetworkCard: installNetworkCard, configureIPv4: configureIPv4, clearIPv4: clearIPv4, removeNode: removeNode, removeBus: removeBus, removeSelected: removeSelected, clearCanvas: clearCanvas, dimensionsFor: dimensionsFor };
 }());

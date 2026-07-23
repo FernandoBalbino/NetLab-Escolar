@@ -367,7 +367,12 @@
     var exposesPhysicalPorts = physicalPortsEnabled() && NetLab.PortModel.portsFor(node, NetLab.State.data.challenge).length > 0;
     item.setAttribute("role", node.type === "pc" || exposesPhysicalPorts ? "group" : "button");
     var accessibilityState = statusText(node).toLowerCase();
-    item.setAttribute("aria-label", node.name + ", " + accessibilityState);
+    var location = node.type === "router"
+      ? { city: NetLab.NetworkScope.sanitizeCity(node.city), cityName: NetLab.NetworkScope.cityName(NetLab.NetworkScope.sanitizeCity(node.city)) }
+      : NetLab.NetworkScope.getDeviceLocation(node.id);
+    var locationText = location.city ? ", localização " + location.cityName : "";
+    item.setAttribute("aria-label", node.name + ", " + accessibilityState + locationText);
+    if (location.city && node.type !== "router") item.title = "Localização: " + location.cityName + " · Herdada de: " + location.routerName;
 
     var image = element("img", "node-image");
     image.src = nodeVisuals[node.type].image;
@@ -382,6 +387,12 @@
     item.appendChild(image);
     item.appendChild(label);
     item.appendChild(state);
+    if (node.type === "router") {
+      var city = element("span", "node-city");
+      city.textContent = "📍 " + location.cityName;
+      city.title = "Cidade usada para classificar enlaces MAN e WAN";
+      item.appendChild(city);
+    }
     var hasPhysicalPorts = exposesPhysicalPorts && addPhysicalPortRail(item, node);
     if (!hasPhysicalPorts) {
       ["top", "right", "bottom", "left"].forEach(function (side) {
@@ -449,7 +460,7 @@
     return item;
   }
 
-  function addCableGroup(fragment, id, kind, pathData, selected, attachment) {
+  function addCableGroup(fragment, id, kind, pathData, selected, attachment, scope, labelPoint) {
     var group = svgElement("g", "cable-group");
     var hit = svgElement("path", "connection-hit");
     var visual = svgElement("path", attachment ? "attachment-path" : "connection-path");
@@ -461,20 +472,52 @@
     visual.dataset.id = id;
     visual.dataset.visual = "true";
     if (selected) visual.classList.add("is-selected");
+    if (scope) {
+      group.dataset.scopeLabel = scope.label;
+      var title = svgElement("title");
+      title.textContent = scope.tooltip || scope.label;
+      group.appendChild(title);
+    }
     group.appendChild(hit);
     group.appendChild(visual);
+    if (selected && scope && labelPoint) appendScopeLabel(group, scope, labelPoint);
     fragment.appendChild(group);
+  }
+
+  function connectionLabelPoint(connection) {
+    var source = connection && NetLab.State.getNode(connection.sourceId);
+    var target = connection && NetLab.State.getNode(connection.targetId);
+    if (!source || !target) return null;
+    var sourcePoint = NetLab.Connections.endpointPoint(source, connection.sourcePortId);
+    var targetPoint = NetLab.Connections.endpointPoint(target, connection.targetPortId);
+    return { x: (sourcePoint.x + targetPoint.x) / 2, y: (sourcePoint.y + targetPoint.y) / 2 };
+  }
+
+  function appendScopeLabel(group, scope, labelPoint) {
+    if (!group || !scope || !labelPoint) return;
+    var text = svgElement("text", "connection-scope-label");
+    text.setAttribute("x", String(labelPoint.x));
+    text.setAttribute("y", String(labelPoint.y - 10));
+    text.setAttribute("text-anchor", "middle");
+    text.textContent = scope.label;
+    group.appendChild(text);
   }
 
   function renderConnections() {
     var fragment = document.createDocumentFragment();
     var selected = NetLab.State.data.selected;
+    var analysis = NetLab.PortModel.isPortChallenge(NetLab.State.data.challenge)
+      ? NetLab.NetworkScope.classifyNetworkScope(NetLab.State.captureProject())
+      : null;
     NetLab.State.data.connections.forEach(function (connection) {
-      addCableGroup(fragment, connection.id, "connection", NetLab.Connections.connectionPath(connection), Boolean(selected && selected.kind === "connection" && selected.id === connection.id), false);
+      var isSelected = Boolean(selected && selected.kind === "connection" && selected.id === connection.id);
+      var scope = analysis ? NetLab.NetworkScope.findConnectionScope(connection.id, NetLab.State.data, analysis) : null;
+      var labelPoint = connectionLabelPoint(connection);
+      addCableGroup(fragment, connection.id, "connection", NetLab.Connections.connectionPath(connection), isSelected, false, scope, labelPoint);
     });
     NetLab.State.data.buses.forEach(function (bus) {
       bus.attachments.forEach(function (attachment) {
-        addCableGroup(fragment, attachment.id, "attachment", NetLab.Connections.attachmentPath(bus, attachment), Boolean(selected && selected.kind === "attachment" && selected.id === attachment.id), true);
+        addCableGroup(fragment, attachment.id, "attachment", NetLab.Connections.attachmentPath(bus, attachment), Boolean(selected && selected.kind === "attachment" && selected.id === attachment.id), true, null, null);
       });
     });
     els.connectionGroup.replaceChildren(fragment);
@@ -511,6 +554,14 @@
     els.connectionGroup.querySelectorAll("[data-visual]").forEach(function (path) {
       path.classList.toggle("is-selected", Boolean(selected && selected.kind === path.dataset.kind && selected.id === path.dataset.id));
     });
+    els.connectionGroup.querySelectorAll(".connection-scope-label").forEach(function (label) { label.remove(); });
+    if (selected && selected.kind === "connection" && NetLab.PortModel.isPortChallenge(NetLab.State.data.challenge)) {
+      var connection = NetLab.State.data.connections.find(function (item) { return item.id === selected.id; });
+      var visual = els.connectionGroup.querySelector('[data-visual][data-kind="connection"][data-id="' + CSS.escape(selected.id) + '"]');
+      var group = visual && visual.parentElement;
+      var scope = group && group.dataset.scopeLabel ? { label: group.dataset.scopeLabel } : null;
+      appendScopeLabel(group, scope, connectionLabelPoint(connection));
+    }
   }
 
   function updateEmpty() {

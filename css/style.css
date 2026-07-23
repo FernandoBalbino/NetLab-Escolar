@@ -317,6 +317,23 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .active-challenge p { margin: 0 0 12px; color: var(--ink-700); font-size: 11px; line-height: 1.45; }
 .challenge-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 .challenge-actions .primary-button { grid-column: span 2; }
+.classification-quiz { display: grid; gap: 7px; margin: 0 0 12px; padding: 10px; background: rgba(255, 255, 255, .82); border: 1px solid var(--blue-100); border-radius: 10px; }
+.classification-quiz[hidden] { display: none; }
+.classification-quiz > strong { color: var(--blue-700); font-size: 11px; }
+.classification-quiz label { color: var(--ink-700); font-size: 10px; font-weight: 700; }
+.classification-answer-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+.classification-answer-row select, .router-city-row select { min-width: 0; height: 34px; padding: 6px 8px; color: var(--ink-900); background: #fff; border: 1px solid var(--line-strong); border-radius: 8px; }
+.active-challenge .classification-message { margin: 0; color: var(--ink-500); font-size: 9.5px; }
+
+.network-analysis { display: grid; gap: 10px; }
+.network-analysis[hidden] { display: none; }
+.scope-list { display: grid; gap: 6px; }
+.scope-item { display: grid; grid-template-columns: 40px 1fr; gap: 7px; padding: 8px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 9px; }
+.scope-item strong { color: var(--ink-400); font-size: 10px; }
+.scope-item span { color: var(--ink-500); font-size: 9.5px; line-height: 1.35; }
+.scope-item.is-detected { background: #effcf5; border-color: #a7e3c1; }
+.scope-item.is-detected strong { color: var(--success); }
+.analysis-warning { margin: 0; padding: 8px; color: #92400e; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 9px; font-size: 9.5px; line-height: 1.4; }
 
 .progress-list { display: grid; gap: 13px; }
 .progress-group { display: grid; gap: 7px; }
@@ -329,6 +346,10 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .inspector label { display: block; margin-bottom: 6px; color: var(--ink-700); font-size: 11px; font-weight: 700; }
 .rename-row { display: grid; grid-template-columns: 1fr auto; gap: 7px; }
 .rename-row input { width: 100%; min-width: 0; height: 36px; padding: 8px 10px; color: var(--ink-900); background: #fff; border: 1px solid var(--line-strong); border-radius: 9px; }
+.router-city-row { margin-top: 10px; padding: 10px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 10px; }
+.router-city-row[hidden] { display: none; }
+.router-city-row select { width: 100%; }
+.router-city-row small { display: block; margin-top: 6px; color: var(--ink-500); font-size: 9px; line-height: 1.35; }
 .inspector > .danger-button { width: 100%; margin-top: 8px; }
 
 .workspace-shell { position: relative; grid-column: 2; min-width: 0; height: 100%; padding: 0; overflow: hidden; }
