@@ -14,7 +14,8 @@
   }
 
   function allowsDirectPcConnection(challenge) {
-    return ["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0;
+    return ["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0
+      || Boolean(NetLab.MacAddress && NetLab.MacAddress.isMacChallenge(challenge));
   }
 
   function activeChallenge() {
@@ -30,7 +31,7 @@
       || (pair === "pc|pc" && allowsDirectPcConnection(topology));
     if (allowed) return { allowed: true, message: "" };
     if (source.type === "internet" || target.type === "internet") return { allowed: false, message: "A Internet só pode ser ligada a um Roteador." };
-    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "Conexões diretas entre PCs são permitidas no Primeiro enlace, em Anel, Malha ou Modo livre." };
+    if (source.type === "pc" && target.type === "pc") return { allowed: false, message: "Conexões diretas entre PCs são permitidas no Primeiro enlace, na trilha MAC, em Anel, Malha ou Modo livre." };
     if (source.type === "router" && target.type === "router") return { allowed: false, message: "A ligação direta entre roteadores é praticada na trilha Tipos de redes." };
     return { allowed: false, message: "Essa combinação de equipamentos não aceita conexão direta." };
   }

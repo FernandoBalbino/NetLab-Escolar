@@ -107,6 +107,26 @@
 .network-node.is-no-internet .node-state::before { background: #f59e0b; box-shadow: 0 0 0 1px #f4bd59; }
 .network-node.needs-network-card .node-state { color: #b45309; }
 .network-node.needs-network-card .node-state::before { background: #f59e0b; box-shadow: 0 0 0 1px #f4bd59; }
+.network-node.needs-mac-address .node-state { color: #b45309; }
+.network-node.needs-mac-address .node-state::before { background: #f59e0b; box-shadow: 0 0 0 1px #f4bd59; }
+.network-node.has-mac-address .node-state { color: var(--success); }
+.network-node.has-mac-address .node-state::before { background: var(--success); box-shadow: 0 0 0 1px #77c99f; }
+.node-mac-address {
+  position: absolute;
+  right: 8px;
+  bottom: 46px;
+  left: 8px;
+  overflow: hidden;
+  color: #b45309;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 13px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.node-mac-address.is-configured { color: var(--blue-700); }
 .node-city { color: var(--blue-700); font-size: 9px; font-weight: 800; line-height: 12px; }
 .port { position: absolute; width: 9px; height: 9px; background: #fff; border: 2px solid var(--blue-500); border-radius: 50%; opacity: 0; transition: opacity 150ms ease; }
 .network-node:hover .port, .network-node.is-selected .port, .workspace[data-tool="cable"] .port { opacity: 1; }
@@ -217,6 +237,31 @@
 .network-card-install { grid-column: 1 / -1; min-height: 32px; margin-top: 5px; padding: 7px 10px; color: #fff; background: var(--blue-600); border-radius: 8px; font-size: 10px; font-weight: 800; cursor: pointer; }
 .network-card-install:hover { background: var(--blue-700); }
 .network-card-install:disabled { color: #23734a; background: #e5f7ed; cursor: default; }
+.network-card-popover--mac { width: 300px; }
+.mac-config { grid-column: 1 / -1; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.mac-config__label { display: block; margin-bottom: 5px; color: var(--ink-700); font-size: 10px; font-weight: 800; }
+.mac-config__input {
+  width: 100%;
+  height: 36px;
+  padding: 8px 10px;
+  color: var(--ink-900);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+.mac-config__input:focus { border-color: var(--blue-500); outline: 3px solid rgba(37, 99, 235, .12); }
+.mac-config__input[aria-invalid="true"] { border-color: var(--danger); outline-color: rgba(220, 38, 38, .12); }
+.mac-config__error { margin: 7px 0 0; color: var(--danger); font-size: 10px; font-weight: 700; line-height: 1.35; }
+.mac-config__actions { display: grid; grid-template-columns: 1.25fr 1fr; gap: 7px; margin-top: 9px; }
+.mac-config__generate, .mac-config__save { min-height: 36px; padding: 8px 10px; border-radius: 9px; font-size: 10px; font-weight: 800; cursor: pointer; }
+.mac-config__generate { color: #fff; background: var(--blue-600); border: 1px solid var(--blue-600); }
+.mac-config__generate:hover { background: var(--blue-700); }
+.mac-config__save { color: var(--ink-700); background: #fff; border: 1px solid var(--line-strong); }
+.mac-config__save:hover { color: var(--blue-700); background: var(--blue-50); border-color: var(--blue-100); }
 
 .ipv4-popover {
   position: absolute;

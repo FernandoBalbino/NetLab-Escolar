@@ -23,7 +23,7 @@
     var pair = [source.type, target.type].sort().join("|");
     return ["internet|router", "pc|router", "pc|switch", "router|switch", "switch|switch"].indexOf(pair) >= 0
       || (pair === "router|router" && NetLab.PortModel.isPortChallenge(challenge))
-      || (pair === "pc|pc" && ["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0);
+      || (pair === "pc|pc" && (["ring", "mesh", "free", "basic-direct"].indexOf(challenge) >= 0 || Boolean(NetLab.MacAddress && NetLab.MacAddress.isMacChallenge(challenge))));
   }
 
   function sanitizeProject(project, options) {
@@ -73,7 +73,8 @@
         status: ["disconnected", "no-internet", "connected"].indexOf(node.status) >= 0 ? node.status : "disconnected",
         hasNetworkCard: hasNetworkCard,
         city: node.type === "router" ? (NetLab.NetworkScope ? NetLab.NetworkScope.sanitizeCity(node.city) : (node.city || "maceio")) : undefined,
-        ipv4: node.type === "pc" ? NetLab.IPv4.sanitize(node.ipv4) : undefined
+        ipv4: node.type === "pc" ? NetLab.IPv4.sanitize(node.ipv4) : undefined,
+        macAddress: node.type === "pc" ? (NetLab.MacAddress ? NetLab.MacAddress.sanitize(node.macAddress) : "") : undefined
       };
     });
 
@@ -154,18 +155,34 @@
       });
     });
 
+    var challengeData = null;
+    if (challenge === "types-complete" && project.challengeData && typeof project.challengeData === "object") {
+      challengeData = {
+        quizScenario: Math.max(0, Math.min(2, finite(project.challengeData.quizScenario, 0))),
+        quizComplete: Boolean(project.challengeData.quizComplete),
+        lastAnswer: typeof project.challengeData.lastAnswer === "string" ? project.challengeData.lastAnswer.slice(0, 16) : null
+      };
+    }
+    if (challenge === "mac-destination" && project.challengeData && typeof project.challengeData === "object") {
+      var quizPcs = nodes.filter(function (node) { return node.type === "pc"; });
+      var sourceId = typeof project.challengeData.macSourceId === "string" ? project.challengeData.macSourceId : "";
+      var targetId = typeof project.challengeData.macTargetId === "string" ? project.challengeData.macTargetId : "";
+      if (!nodeById.has(sourceId) || nodeById.get(sourceId).type !== "pc") sourceId = quizPcs[0] ? quizPcs[0].id : "";
+      if (!nodeById.has(targetId) || nodeById.get(targetId).type !== "pc" || targetId === sourceId) targetId = quizPcs.find(function (pc) { return pc.id !== sourceId; }) ? quizPcs.find(function (pc) { return pc.id !== sourceId; }).id : "";
+      challengeData = {
+        macSourceId: sourceId,
+        macTargetId: targetId,
+        macQuizComplete: Boolean(project.challengeData.macQuizComplete),
+        lastAnswer: NetLab.MacAddress ? NetLab.MacAddress.sanitize(project.challengeData.lastAnswer) : null
+      };
+    }
+
     return {
       nodes: nodes,
       connections: connections,
       buses: buses,
       challenge: challenge,
-      challengeData: challenge === "types-complete" && project.challengeData && typeof project.challengeData === "object"
-        ? {
-          quizScenario: Math.max(0, Math.min(2, finite(project.challengeData.quizScenario, 0))),
-          quizComplete: Boolean(project.challengeData.quizComplete),
-          lastAnswer: typeof project.challengeData.lastAnswer === "string" ? project.challengeData.lastAnswer.slice(0, 16) : null
-        }
-        : null,
+      challengeData: challengeData,
       hintsUsed: Math.max(0, Math.min(5, finite(project.hintsUsed, 0))),
       zoom: NetLab.State.clamp(finite(project.zoom, 1), .4, 2),
       pan: {

@@ -21,6 +21,7 @@ function loadScript(name) {
 
 loadScript("topology-validator.js");
 loadScript("state.js");
+loadScript("mac-address.js");
 loadScript("port-model.js");
 loadScript("connections.js");
 loadScript("ipv4.js");
@@ -62,7 +63,7 @@ function project(challenge) {
 var pc1 = node("pc1");
 var pc2 = node("pc2");
 
-["ring", "mesh", "free", "basic-direct"].forEach(function (challenge) {
+["ring", "mesh", "free", "basic-direct", "mac-identities", "mac-conflict", "mac-destination"].forEach(function (challenge) {
   NetLab.State.data.challenge = challenge;
   assert.equal(NetLab.Connections.connectionRule(pc1, pc2).allowed, true, "PC-PC deve ser permitido em " + challenge);
   assert.doesNotThrow(function () {
@@ -78,7 +79,7 @@ var pc2 = node("pc2");
   }, /tipos de equipamentos incompatíveis/, "um projeto PC-PC deve ser rejeitado em " + challenge);
 });
 
-["ring", "mesh", "free", "basic-direct"].forEach(function (challenge) {
+["ring", "mesh", "free", "basic-direct", "mac-identities", "mac-conflict", "mac-destination"].forEach(function (challenge) {
   NetLab.State.data.challenge = challenge;
   NetLab.State.data.nodes = [pc1, pc2];
   NetLab.State.data.connections = [];

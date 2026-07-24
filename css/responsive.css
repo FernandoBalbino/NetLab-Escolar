@@ -3,6 +3,7 @@
   .brand-copy span { display: none; }
   .floating-toolbar { max-width: calc(100vw - var(--sidebar-width) - 20px); }
   .tool-button { width: 34px; height: 34px; }
+  .exercise-panel { width: min(350px, calc(100vw - var(--sidebar-width) - 28px)); }
 }
 
 @media (max-width: 760px) {
@@ -28,6 +29,23 @@
   .tool-button { width: 40px; height: 40px; }
   [data-tooltip]::after { display: none; }
 
+  .exercise-launcher { top: 8px; right: 8px; width: 44px; height: 44px; }
+  .exercise-launcher img { width: 23px; height: 23px; }
+  .exercise-panel {
+    top: 116px;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    border-radius: 20px;
+    transform: translateY(calc(100% + 124px));
+  }
+  .exercise-panel.is-open { transform: translateY(0); }
+  .exercise-panel__header { padding: 15px 16px 12px; }
+  .exercise-panel__scroll { padding: 12px; }
+  .exercise-module-popup__header { padding: 12px; }
+  .exercise-module-popup__scroll { padding: 12px; }
+
   .sidebar {
     position: fixed;
     top: auto;
@@ -36,7 +54,7 @@
     left: 8px;
     z-index: 70;
     width: auto;
-    height: min(62vh, 520px);
+    height: min(52vh, 440px);
     padding-top: 0;
     background: rgba(255, 255, 255, .98);
     border: 1px solid var(--line);
@@ -53,6 +71,7 @@
   .interaction-hint.is-visible + .network-tip { top: 154px; }
   .workspace-status { bottom: 8px; flex-wrap: wrap; max-width: calc(100% - 24px); }
   .workspace-status span:nth-child(2), .workspace-status span:nth-child(3) { display: none; }
+  .workspace-inspector { right: 8px; bottom: 50px; left: 8px; width: auto; max-height: calc(100vh - 174px); overflow-y: auto; }
   .feedback { right: 10px; bottom: 50px; width: calc(100vw - 20px); }
   .tutorial-modal { grid-template-columns: 1fr; max-height: calc(100vh - 28px); overflow-y: auto; }
   .tutorial-visual { min-height: 170px; padding: 20px; }

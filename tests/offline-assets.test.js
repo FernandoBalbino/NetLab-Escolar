@@ -19,3 +19,9 @@ test("a nova trilha, a análise geográfica e o ícone das portas funcionam offl
     assert.equal(manifest.includes(entry), true, `faltou no precache: ${entry}`);
   });
 });
+
+test("a trilha de endereço MAC funciona offline", () => {
+  ["./js/mac-address.js", "./js/mac-validator.js"].forEach((entry) => {
+    assert.equal(manifest.includes(entry), true, `faltou no precache: ${entry}`);
+  });
+});

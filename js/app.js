@@ -4,8 +4,8 @@
   var NetLab = window.NetLab = window.NetLab || {};
   var feedbackTimer = 0;
   var previousSpaceTool = null;
-  var openModules = { basics: false, types: false, topologies: false };
-  var modulesInitialized = false;
+  var activeExerciseModule = null;
+  var exercisePanelOpen = false;
   var toolLabels = {
     select: "Selecionar",
     pan: "Mover espaço",
@@ -83,22 +83,52 @@
   }
 
   function renderChallenges() {
-    var activeModule = NetLab.Challenges.moduleFor(NetLab.State.data.challenge);
-    if (!modulesInitialized) {
-      if (activeModule) openModules[activeModule] = true;
-      modulesInitialized = true;
-    }
+    var selectedModule = null;
     NetLab.Challenges.modules().forEach(function (module) {
       renderChallengeList(module);
       var section = document.querySelector('[data-learning-module="' + module.id + '"]');
       var list = document.getElementById(module.id + "-challenge-list");
       var toggle = document.querySelector('[data-challenge-module="' + module.id + '"]');
-      var isOpen = Boolean(openModules[module.id]);
+      var isOpen = activeExerciseModule === module.id;
+      if (isOpen) selectedModule = module;
       section.classList.toggle("is-open", isOpen);
       list.hidden = !isOpen;
       toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      toggle.textContent = isOpen ? "Fechar exercícios" : "Abrir exercícios";
+      toggle.textContent = "Abrir exercícios";
     });
+
+    var popup = document.getElementById("exercise-module-popup");
+    var overview = document.querySelector(".exercise-panel__scroll");
+    popup.hidden = !selectedModule;
+    popup.inert = !selectedModule;
+    popup.setAttribute("aria-hidden", selectedModule ? "false" : "true");
+    overview.inert = Boolean(selectedModule);
+    overview.setAttribute("aria-hidden", selectedModule ? "true" : "false");
+    if (!selectedModule) return;
+
+    var moduleCard = document.querySelector('[data-learning-module="' + selectedModule.id + '"]');
+    document.getElementById("exercise-module-step").textContent = moduleCard.querySelector(".learning-module__step").textContent;
+    document.getElementById("exercise-module-title").textContent = selectedModule.name;
+    document.getElementById("exercise-module-description").textContent = selectedModule.short;
+    document.getElementById("exercise-module-count").textContent = document.getElementById(selectedModule.id + "-challenge-count").textContent;
+  }
+
+  function openExerciseModule(moduleId) {
+    activeExerciseModule = moduleId;
+    renderChallenges();
+    window.setTimeout(function () { document.getElementById("exercise-module-back").focus(); }, 0);
+  }
+
+  function closeExerciseModulePopup(restoreFocus) {
+    var moduleId = activeExerciseModule;
+    activeExerciseModule = null;
+    renderChallenges();
+    if (restoreFocus && moduleId) {
+      window.setTimeout(function () {
+        var toggle = document.querySelector('[data-challenge-module="' + moduleId + '"]');
+        if (toggle) toggle.focus();
+      }, 0);
+    }
   }
 
   function renderProgress() {
@@ -188,6 +218,34 @@
         ? "Três respostas corretas. Clique em Verificar para concluir."
         : "Observe os equipamentos, as portas e as cidades antes de responder.";
     }
+
+    var macQuiz = document.getElementById("mac-destination-quiz");
+    var isMacQuiz = id === "mac-destination" && NetLab.State.data.challengeData;
+    macQuiz.hidden = !isMacQuiz;
+    if (isMacQuiz) {
+      var macData = NetLab.State.data.challengeData;
+      var source = NetLab.State.getNode(macData.macSourceId);
+      var target = NetLab.State.getNode(macData.macTargetId);
+      if (!source || !target) { macQuiz.hidden = true; return; }
+      document.getElementById("mac-destination-question").textContent = source.name + " enviará um quadro para " + target.name + ". Qual MAC deve ir no campo de destino?";
+      var macSelect = document.getElementById("mac-destination-answer");
+      var placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Selecione o destinatário";
+      var options = [placeholder];
+      [source, target].forEach(function (node) {
+        var option = document.createElement("option");
+        option.value = node.macAddress;
+        option.textContent = node.name + " — " + node.macAddress;
+        options.push(option);
+      });
+      macSelect.replaceChildren.apply(macSelect, options);
+      macSelect.disabled = Boolean(macData.macQuizComplete);
+      document.getElementById("mac-destination-submit").disabled = Boolean(macData.macQuizComplete);
+      document.getElementById("mac-destination-message").textContent = macData.macQuizComplete
+        ? "Destino identificado. Clique em Verificar para concluir."
+        : "O endereço de destino identifica a placa que deve receber o quadro.";
+    }
   }
 
   function setScopeResult(id, active, text) {
@@ -196,9 +254,13 @@
     item.querySelector("span").textContent = text;
   }
 
+  function shouldShowNetworkAnalysis(challenge) {
+    return challenge !== "types-complete" && NetLab.Challenges.moduleFor(challenge) === "types";
+  }
+
   function renderNetworkAnalysis() {
     var section = document.getElementById("network-analysis");
-    var visible = NetLab.Challenges.moduleFor(NetLab.State.data.challenge) === "types";
+    var visible = shouldShowNetworkAnalysis(NetLab.State.data.challenge);
     section.hidden = !visible;
     if (!visible) return;
     var analysis = NetLab.NetworkScope.classifyNetworkScope(NetLab.State.captureProject());
@@ -240,6 +302,31 @@
     var toggle = document.getElementById("sidebar-toggle");
     toggle.setAttribute("aria-label", collapsed ? "Abrir painel lateral" : "Recolher painel lateral");
     toggle.dataset.tooltip = collapsed ? "Abrir painel" : "Recolher painel";
+  }
+
+  function setExercisePanel(open, restoreFocus) {
+    exercisePanelOpen = Boolean(open);
+    if (!exercisePanelOpen && activeExerciseModule) {
+      activeExerciseModule = null;
+      renderChallenges();
+    }
+    var panel = document.getElementById("exercise-panel");
+    var toggle = document.getElementById("exercise-panel-toggle");
+    panel.classList.toggle("is-open", exercisePanelOpen);
+    panel.setAttribute("aria-hidden", exercisePanelOpen ? "false" : "true");
+    panel.inert = !exercisePanelOpen;
+    toggle.setAttribute("aria-expanded", exercisePanelOpen ? "true" : "false");
+    toggle.setAttribute("aria-label", exercisePanelOpen ? "Fechar trilhas de exercícios" : "Abrir trilhas de exercícios");
+    toggle.dataset.tooltip = exercisePanelOpen ? "Fechar trilhas de exercícios" : "Abrir trilhas de exercícios";
+    document.body.classList.toggle("is-exercise-panel-open", exercisePanelOpen);
+
+    if (exercisePanelOpen) {
+      if (window.innerWidth <= 760 && !NetLab.State.data.preferences.sidebarCollapsed) {
+        NetLab.State.data.preferences.sidebarCollapsed = true;
+        NetLab.State.emit("preferences");
+      }
+      window.setTimeout(function () { document.getElementById("exercise-panel-close").focus(); }, 0);
+    } else if (restoreFocus) toggle.focus();
   }
 
   function renderAll() {
@@ -291,8 +378,8 @@
     if (hasElements() && !window.confirm("Iniciar este desafio limpará a área de trabalho atual. Deseja continuar?")) return;
     if (NetLab.Challenges.start(id)) {
       var challenge = NetLab.Challenges.get(id);
-      openModules[challenge.module] = true;
       feedback("info", "Desafio iniciado", challenge.objective);
+      setExercisePanel(false, false);
       if (window.innerWidth <= 760) {
         NetLab.State.data.preferences.sidebarCollapsed = true;
         NetLab.State.emit("preferences");
@@ -333,6 +420,16 @@
   }
 
   function onKeyDown(event) {
+    if (event.key === "Escape" && activeExerciseModule) {
+      event.preventDefault();
+      closeExerciseModulePopup(true);
+      return;
+    }
+    if (event.key === "Escape" && exercisePanelOpen) {
+      event.preventDefault();
+      setExercisePanel(false, true);
+      return;
+    }
     if (isTyping(event)) {
       if (event.key === "Escape") { event.target.blur(); event.preventDefault(); }
       return;
@@ -384,18 +481,26 @@
     document.querySelectorAll("[data-add]").forEach(function (button) {
       button.addEventListener("click", function () { NetLab.Workspace.addAtCenter(button.dataset.add); });
     });
-    document.getElementById("learning-modules").addEventListener("click", function (event) {
+    document.getElementById("exercise-panel").addEventListener("click", function (event) {
       var toggle = event.target.closest("[data-challenge-module]");
       if (toggle) {
-        var moduleId = toggle.dataset.challengeModule;
-        openModules[moduleId] = !openModules[moduleId];
-        renderChallenges();
+        openExerciseModule(toggle.dataset.challengeModule);
         return;
       }
       var button = event.target.closest("[data-challenge]");
       if (button && !button.disabled) startChallenge(button.dataset.challenge);
     });
+    document.getElementById("exercise-module-back").addEventListener("click", function () {
+      closeExerciseModulePopup(true);
+    });
+    document.getElementById("exercise-panel-toggle").addEventListener("click", function () {
+      setExercisePanel(!exercisePanelOpen, true);
+    });
+    document.getElementById("exercise-panel-close").addEventListener("click", function () {
+      setExercisePanel(false, true);
+    });
     document.getElementById("sidebar-toggle").addEventListener("click", function () {
+      if (window.innerWidth <= 760 && NetLab.State.data.preferences.sidebarCollapsed) setExercisePanel(false, false);
       NetLab.State.data.preferences.sidebarCollapsed = !NetLab.State.data.preferences.sidebarCollapsed;
       NetLab.State.emit("preferences");
     });
@@ -426,8 +531,23 @@
       select.value = "";
       feedback(result.correct ? "success" : "warning", result.correct ? "Classificação correta" : "Revise o cenário", result.message);
     });
+    document.getElementById("mac-destination-submit").addEventListener("click", function () {
+      var select = document.getElementById("mac-destination-answer");
+      if (!select.value) {
+        feedback("warning", "Escolha um endereço", "Selecione o MAC do computador que receberá o quadro.");
+        return;
+      }
+      var result = NetLab.Challenges.submitMacDestinationAnswer(select.value);
+      feedback(result.correct ? "success" : "warning", result.correct ? "Destino correto" : "Revise o destinatário", result.message);
+    });
     document.getElementById("inspector-delete").addEventListener("click", function () { NetLab.Devices.removeSelected(); });
     document.getElementById("feedback-close").addEventListener("click", hideFeedback);
+    document.addEventListener("pointerdown", function (event) {
+      if (!exercisePanelOpen) return;
+      var panel = document.getElementById("exercise-panel");
+      var toggle = document.getElementById("exercise-panel-toggle");
+      if (!panel.contains(event.target) && !toggle.contains(event.target)) setExercisePanel(false, false);
+    });
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
     window.addEventListener("beforeunload", NetLab.Storage.saveNow);
@@ -443,6 +563,11 @@
     NetLab.Tutorial.init();
   }
 
-  NetLab.App = { init: init, feedback: feedback, verifyTopology: verifyTopology };
+  NetLab.App = {
+    init: init,
+    feedback: feedback,
+    verifyTopology: verifyTopology,
+    shouldShowNetworkAnalysis: shouldShowNetworkAnalysis
+  };
   document.addEventListener("DOMContentLoaded", init, { once: true });
 }());

@@ -1,6 +1,6 @@
 # NetLab Escolar
 
-O **NetLab Escolar** é um simulador educativo de redes feito para alunos do ensino médio. Ele permite montar o caminho Internet → Roteador → Switch → PCs, instalar placas de rede, configurar IPv4, criar cabos e um barramento compartilhado, praticar redes básicas, LAN/MAN/WAN e cinco topologias, além de receber feedback sobre cada tentativa.
+O **NetLab Escolar** é um simulador educativo de redes feito para alunos do ensino médio. Ele permite montar o caminho Internet → Roteador → Switch → PCs, instalar placas de rede, configurar IPv4 e endereços MAC, criar cabos e um barramento compartilhado, praticar redes básicas, LAN/MAN/WAN e cinco topologias, além de receber feedback sobre cada tentativa.
 
 O projeto usa somente HTML5, CSS3 e JavaScript puro. Não há backend, banco de dados, bibliotecas externas ou etapa de compilação.
 
@@ -34,6 +34,8 @@ NetLab-Escolar/
 └── js/
     ├── state.js
     ├── history.js
+    ├── ipv4.js
+    ├── mac-address.js
     ├── port-model.js
     ├── network-scope.js
     ├── storage.js
@@ -41,6 +43,7 @@ NetLab-Escolar/
     ├── connections.js
     ├── network-basics-validator.js
     ├── network-types-validator.js
+    ├── mac-validator.js
     ├── topology-validator.js
     ├── challenges.js
     ├── communication-test.js
@@ -68,7 +71,7 @@ Para substituí-las, mantenha os mesmos nomes de arquivo e prefira imagens PNG c
 
 ## Conectividade e status
 
-A lógica fica em `js/connections.js`. A função `connectionRule` permite Internet ↔ Roteador, Roteador ↔ Switch, Roteador ↔ PC, Switch ↔ PC e Switch ↔ Switch. Conexões PC ↔ PC são permitidas nos desafios Anel e Malha e no Modo livre, mas continuam bloqueadas em Estrela, Barramento e Árvore. Internet ↔ PC, Internet ↔ Switch e outras combinações incompatíveis são bloqueadas com uma mensagem educativa.
+A lógica fica em `js/connections.js`. A função `connectionRule` permite Internet ↔ Roteador, Roteador ↔ Switch, Roteador ↔ PC, Switch ↔ PC e Switch ↔ Switch. Conexões PC ↔ PC são permitidas no Primeiro enlace, na trilha de endereço MAC, nos desafios Anel e Malha e no Modo livre, mas continuam bloqueadas em Estrela, Barramento e Árvore. Internet ↔ PC, Internet ↔ Switch e outras combinações incompatíveis são bloqueadas com uma mensagem educativa.
 
 A função `recalculateStatuses` monta o grafo da rede, encontra os roteadores ligados diretamente à Internet e executa uma busca em largura a partir deles. O resultado é recalculado depois de qualquer alteração:
 
@@ -94,15 +97,20 @@ O teste de comunicação usa busca em largura (BFS) para encontrar um caminho en
 
 ## Trilhas de exercícios
 
-Os exercícios ficam recolhidos em três módulos que podem ser abertos separadamente:
+O painel lateral reúne a biblioteca de equipamentos e o desafio atual. As trilhas, a análise da rede e o progresso são abertos pelo botão de livro no canto superior direito da área de trabalho.
+
+Os exercícios ficam recolhidos em quatro módulos que podem ser abertos separadamente:
 
 - **Redes básicas:** cinco etapas progressivas — conexão direta entre dois PCs, rede com switch, LAN com três PCs, roteador na borda e caminho completo até a Internet.
 - **Tipos de redes:** cinco etapas para montar uma LAN, unir duas LANs de Maceió em uma MAN, transformar a MAN em WAN ao mover uma unidade para Arapiraca, conectar uma LAN à Internet e classificar três cenários prontos. Somente nessa trilha o roteador expõe 3 portas LAN + 1 WAN e o switch expõe 5 portas; cada cabo ocupa uma porta livre.
+- **Endereço MAC:** três etapas curtas para gerar identidades aleatórias para duas placas, corrigir dois computadores com MAC duplicado e identificar o endereço do destinatário de um quadro Ethernet.
 - **Topologias:** Estrela, Barramento, Anel, Malha e Árvore.
 
 Na trilha de redes básicas, cada computador precisa de placa de rede, endereço IPv4 único e máscara compatível. A etapa só é concluída depois que o aluno executa **Testar comunicação** com sucesso e verifica o exercício. Alterar cabos ou configurações depois do teste invalida essa comprovação e exige um novo envio de pacote.
 
 Na trilha de tipos de redes, cada roteador pode representar Maceió ou Arapiraca. Computadores e switches herdam a cidade do roteador responsável por sua LAN. O analisador em `js/network-scope.js` só reconhece MAN ou WAN geográfica quando existem LANs próprias válidas e conectadas; a Internet só representa WAN quando entra pela porta WAN de um roteador que possui uma LAN interna.
+
+Na trilha de endereço MAC, os cenários usam apenas dois computadores ligados diretamente. A configuração fica dentro do painel da placa de rede. O botão **Gerar MAC aleatório** cria um endereço local e individual válido; a comunicação é bloqueada enquanto algum computador estiver sem MAC ou quando os dois estiverem usando o mesmo endereço.
 
 ## Como criar um novo desafio
 
@@ -164,6 +172,6 @@ O NetLab Escolar é uma PWA instalável. Depois do primeiro acesso completo pelo
 
 No Chrome ou Chromebook, abra o site e use o ícone **Instalar** na barra de endereço. Depois da instalação, o laboratório abre sem internet e mantém projetos, progresso e preferências no `localStorage` do dispositivo.
 
-O cache atual é `netlab-offline-v6`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
+O cache atual é `netlab-offline-v13`. Ao alterar recursos do projeto, incremente `CACHE_VERSION` em `service-worker.js`; caches antigos são apagados automaticamente na ativação da nova versão.
 
 Não altere os caminhos relativos nem mova o `index.html` para fora da raiz publicada.

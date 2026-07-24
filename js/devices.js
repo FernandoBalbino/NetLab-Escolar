@@ -34,7 +34,8 @@
       status: "disconnected",
       city: type === "router" ? NetLab.NetworkScope.DEFAULT_CITY : undefined,
       hasNetworkCard: type === "pc" ? false : undefined,
-      ipv4: type === "pc" ? NetLab.IPv4.defaultConfiguration() : undefined
+      ipv4: type === "pc" ? NetLab.IPv4.defaultConfiguration() : undefined,
+      macAddress: type === "pc" ? "" : undefined
     };
     NetLab.State.data.nodes.push(node);
     NetLab.State.data.selected = { kind: "node", id: node.id };
@@ -116,6 +117,43 @@
     return true;
   }
 
+  function configureMac(id, value) {
+    var node = NetLab.State.getNode(id);
+    if (!node || node.type !== "pc") return { valid: false, field: "macAddress", message: "Selecione um computador para configurar o MAC." };
+    if (!node.hasNetworkCard) return { valid: false, field: "macAddress", message: "Instale a placa de rede antes de configurar o MAC." };
+    var taken = NetLab.State.data.nodes.filter(function (item) {
+      return item.type === "pc" && item.id !== id && item.macAddress;
+    }).map(function (item) { return item.macAddress; });
+    var result = NetLab.MacAddress.validate(value, taken);
+    if (!result.valid) return result;
+    if (node.macAddress === result.value) return { valid: true, unchanged: true, value: result.value };
+    node.macAddress = result.value;
+    NetLab.State.data.communicationProof = null;
+    NetLab.History.record("configure-mac");
+    NetLab.State.emit("configure-mac");
+    return result;
+  }
+
+  function generateMac(id) {
+    var node = NetLab.State.getNode(id);
+    if (!node || node.type !== "pc") return { valid: false, field: "macAddress", message: "Selecione um computador para gerar o MAC." };
+    if (!node.hasNetworkCard) return { valid: false, field: "macAddress", message: "Instale a placa de rede antes de gerar o MAC." };
+    var taken = NetLab.State.data.nodes.filter(function (item) {
+      return item.type === "pc" && item.id !== id && item.macAddress;
+    }).map(function (item) { return item.macAddress; });
+    return configureMac(id, NetLab.MacAddress.generate(taken));
+  }
+
+  function clearMac(id) {
+    var node = NetLab.State.getNode(id);
+    if (!node || node.type !== "pc" || !node.macAddress) return false;
+    node.macAddress = "";
+    NetLab.State.data.communicationProof = null;
+    NetLab.History.record("clear-mac");
+    NetLab.State.emit("clear-mac");
+    return true;
+  }
+
   function removeNode(id) {
     var before = NetLab.State.data.nodes.length;
     NetLab.State.data.nodes = NetLab.State.data.nodes.filter(function (node) { return node.id !== id; });
@@ -177,5 +215,5 @@
     return definition ? { width: definition.width, height: definition.height } : null;
   }
 
-  NetLab.Devices = { add: add, addBus: addBus, renameNode: renameNode, setRouterCity: setRouterCity, installNetworkCard: installNetworkCard, configureIPv4: configureIPv4, clearIPv4: clearIPv4, removeNode: removeNode, removeBus: removeBus, removeSelected: removeSelected, clearCanvas: clearCanvas, dimensionsFor: dimensionsFor };
+  NetLab.Devices = { add: add, addBus: addBus, renameNode: renameNode, setRouterCity: setRouterCity, installNetworkCard: installNetworkCard, configureIPv4: configureIPv4, clearIPv4: clearIPv4, configureMac: configureMac, generateMac: generateMac, clearMac: clearMac, removeNode: removeNode, removeBus: removeBus, removeSelected: removeSelected, clearCanvas: clearCanvas, dimensionsFor: dimensionsFor };
 }());

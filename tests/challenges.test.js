@@ -14,6 +14,7 @@ function loadScript(name) {
 }
 
 loadScript("state.js");
+loadScript("mac-address.js");
 const NetLab = context.window.NetLab;
 NetLab.History = { record() {} };
 NetLab.Storage = { saveNow() {} };
@@ -25,13 +26,17 @@ NetLab.NetworkBasicsValidator = {
 NetLab.NetworkTypesValidator = {
   validate(id) { return { valid: true, topology: id, challengeId: id, hints: [], details: {} }; }
 };
+NetLab.MacValidator = {
+  validate(id) { return { valid: true, topology: id, challengeId: id, hints: [], details: {} }; },
+  signature() { return "mac-signature"; }
+};
 NetLab.TopologyValidator = {
   validate(id) { return { valid: true, topology: id, hints: [], details: {} }; }
 };
 loadScript("challenges.js");
 
-test("mantém progressões independentes para as três trilhas", () => {
-  assert.deepEqual(Array.from(NetLab.State.data.progress.unlocked).sort(), ["basic-direct", "star", "types-lan-ports"]);
+test("mantém progressões independentes para as quatro trilhas", () => {
+  assert.deepEqual(Array.from(NetLab.State.data.progress.unlocked).sort(), ["basic-direct", "mac-identities", "star", "types-lan-ports"]);
 
   assert.equal(NetLab.Challenges.start("basic-direct"), true);
   const basicResult = NetLab.Challenges.validateCurrent();
@@ -47,6 +52,13 @@ test("mantém progressões independentes para as três trilhas", () => {
   assert.equal(typesResult.nextUnlocked, "types-switch-capacity");
   assert.equal(NetLab.Challenges.isUnlocked("types-switch-capacity"), true);
   assert.equal(NetLab.Challenges.isUnlocked("types-wan-access"), false);
+
+  assert.equal(NetLab.Challenges.start("mac-identities"), true);
+  const macResult = NetLab.Challenges.validateCurrent();
+  assert.equal(macResult.valid, true);
+  assert.equal(macResult.nextUnlocked, "mac-conflict");
+  assert.equal(NetLab.Challenges.isUnlocked("mac-conflict"), true);
+  assert.equal(NetLab.Challenges.isUnlocked("mac-destination"), false);
 
   assert.equal(NetLab.Challenges.start("star"), true);
   const topologyResult = NetLab.Challenges.validateCurrent();
@@ -74,4 +86,24 @@ test("semeia os cenários prontos e avança o quiz de classificação", () => {
   const result = NetLab.Challenges.submitClassificationAnswer("LAN+WAN");
   assert.equal(result.complete, true);
   assert.equal(NetLab.State.data.challengeData.quizComplete, true);
+});
+
+test("semeia os três exercícios simples de endereço MAC", () => {
+  if (!NetLab.Challenges.isUnlocked("mac-identities")) NetLab.State.data.progress.unlocked.push("mac-identities");
+  assert.equal(NetLab.Challenges.start("mac-identities"), true);
+  assert.equal(NetLab.State.data.nodes.length, 2);
+  assert.equal(NetLab.State.data.connections.length, 1);
+  assert.deepEqual(Array.from(NetLab.State.data.nodes.map((node) => node.macAddress)), ["", ""]);
+
+  if (!NetLab.Challenges.isUnlocked("mac-conflict")) NetLab.State.data.progress.unlocked.push("mac-conflict");
+  assert.equal(NetLab.Challenges.start("mac-conflict"), true);
+  assert.equal(NetLab.State.data.nodes[0].macAddress, NetLab.State.data.nodes[1].macAddress);
+
+  if (!NetLab.Challenges.isUnlocked("mac-destination")) NetLab.State.data.progress.unlocked.push("mac-destination");
+  assert.equal(NetLab.Challenges.start("mac-destination"), true);
+  const source = NetLab.State.getNode(NetLab.State.data.challengeData.macSourceId);
+  const target = NetLab.State.getNode(NetLab.State.data.challengeData.macTargetId);
+  assert.equal(NetLab.Challenges.submitMacDestinationAnswer(source.macAddress).correct, false);
+  assert.equal(NetLab.Challenges.submitMacDestinationAnswer(target.macAddress).correct, true);
+  assert.equal(NetLab.State.data.challengeData.macQuizComplete, true);
 });

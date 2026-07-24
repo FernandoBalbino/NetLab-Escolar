@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 global.window = global;
 require("../js/ipv4.js");
+require("../js/mac-address.js");
 
 const nodes = new Map([
   ["switch-1", { id: "switch-1", type: "switch", name: "Switch-1" }],
@@ -10,6 +11,7 @@ const nodes = new Map([
 ]);
 
 global.NetLab.State = {
+  data: { challenge: "free" },
   getNode(id) {
     return nodes.get(id) || null;
   }
@@ -51,4 +53,33 @@ test("bloqueia caminho que depende de roteador sem configuração", () => {
   );
   assert.equal(result.ok, false);
   assert.equal(result.title, "Roteamento não configurado");
+});
+
+test("na trilha MAC só comunica quando os dois computadores têm endereços únicos", () => {
+  global.NetLab.State.data.challenge = "mac-identities";
+  const path = { vertices: ["pc-a", "pc-b"], edges: [] };
+  const missing = global.NetLab.Communication.logicalResult(
+    { id: "pc-a", name: "PC A", macAddress: "" },
+    { id: "pc-b", name: "PC B", macAddress: "02:10:20:30:40:52" },
+    path
+  );
+  assert.equal(missing.ok, false);
+  assert.equal(missing.title, "MAC não configurado");
+
+  const conflict = global.NetLab.Communication.logicalResult(
+    { id: "pc-a", name: "PC A", macAddress: "02:10:20:30:40:50" },
+    { id: "pc-b", name: "PC B", macAddress: "02:10:20:30:40:50" },
+    path
+  );
+  assert.equal(conflict.ok, false);
+  assert.equal(conflict.title, "Conflito de endereço MAC");
+
+  const delivered = global.NetLab.Communication.logicalResult(
+    { id: "pc-a", name: "PC A", macAddress: "02:10:20:30:40:51" },
+    { id: "pc-b", name: "PC B", macAddress: "02:10:20:30:40:52" },
+    path
+  );
+  assert.equal(delivered.ok, true);
+  assert.equal(delivered.title, "Quadro entregue!");
+  global.NetLab.State.data.challenge = "free";
 });

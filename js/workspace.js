@@ -60,6 +60,7 @@
 
   function statusText(node) {
     if (node.type === "pc" && !node.hasNetworkCard) return "Sem placa de rede";
+    if (node.type === "pc" && macControlsEnabled()) return NetLab.MacAddress.sanitize(node.macAddress) ? "MAC configurado" : "Sem endereço MAC";
     if (node.status === "connected") return "Conectado";
     if (node.status === "no-internet") return "Sem internet";
     return "Desconectado";
@@ -67,6 +68,10 @@
 
   function physicalPortsEnabled() {
     return NetLab.PortModel.isPortChallenge(NetLab.State.data.challenge);
+  }
+
+  function macControlsEnabled() {
+    return Boolean(NetLab.MacAddress && NetLab.MacAddress.isMacChallenge(NetLab.State.data.challenge));
   }
 
   function addPhysicalPortRail(item, node) {
@@ -225,6 +230,67 @@
     popover.appendChild(title);
     popover.appendChild(description);
     popover.appendChild(install);
+
+    if (macControlsEnabled()) {
+      popover.classList.add("network-card-popover--mac");
+      var macSection = element("div", "mac-config");
+      var macLabel = element("label", "mac-config__label");
+      var macInputId = "mac-address-" + node.id;
+      macLabel.setAttribute("for", macInputId);
+      macLabel.textContent = "Endereço MAC";
+      var macInput = element("input", "mac-config__input");
+      macInput.id = macInputId;
+      macInput.type = "text";
+      macInput.maxLength = 17;
+      macInput.autocomplete = "off";
+      macInput.spellcheck = false;
+      macInput.placeholder = "02:1A:2B:3C:4D:5E";
+      macInput.value = NetLab.MacAddress.sanitize(node.macAddress);
+      var macError = element("p", "mac-config__error");
+      macError.setAttribute("role", "alert");
+      macError.hidden = true;
+      var macActions = element("div", "mac-config__actions");
+      var generateMac = element("button", "mac-config__generate");
+      generateMac.type = "button";
+      generateMac.textContent = "Gerar MAC aleatório";
+      var saveMac = element("button", "mac-config__save");
+      saveMac.type = "button";
+      saveMac.textContent = "Salvar digitado";
+      macActions.appendChild(generateMac);
+      macActions.appendChild(saveMac);
+      macSection.appendChild(macLabel);
+      macSection.appendChild(macInput);
+      macSection.appendChild(macError);
+      macSection.appendChild(macActions);
+      popover.appendChild(macSection);
+
+      function showMacError(result) {
+        macError.textContent = result.message;
+        macError.hidden = false;
+        macInput.setAttribute("aria-invalid", "true");
+        macInput.focus();
+      }
+
+      generateMac.addEventListener("click", function (event) {
+        event.stopPropagation();
+        var result = NetLab.Devices.generateMac(node.id);
+        if (!result.valid) { showMacError(result); return; }
+        if (NetLab.App) NetLab.App.feedback("success", "MAC gerado", node.name + " recebeu o endereço " + result.value + ".");
+      });
+      saveMac.addEventListener("click", function (event) {
+        event.stopPropagation();
+        var result = NetLab.Devices.configureMac(node.id, macInput.value);
+        if (!result.valid) { showMacError(result); return; }
+        if (NetLab.App) NetLab.App.feedback("success", result.unchanged ? "MAC já configurado" : "MAC salvo", node.name + " usa " + result.value + ".");
+      });
+      macInput.addEventListener("input", function () {
+        macInput.removeAttribute("aria-invalid");
+        macError.hidden = true;
+      });
+      macInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") { event.preventDefault(); saveMac.click(); }
+      });
+    }
     item.appendChild(popover);
   }
 
@@ -356,7 +422,9 @@
     var noInternet = node.status === "no-internet";
     var cardStateClass = node.type === "pc" ? (node.hasNetworkCard ? " has-network-card" : " needs-network-card") : "";
     var popoverStateClass = openNetworkCardNodeId === node.id || openIPv4NodeId === node.id ? " has-open-popover" : "";
-    var item = element("div", "network-node network-node--" + node.type + (connected ? " is-connected" : "") + (noInternet ? " is-no-internet" : "") + cardStateClass + popoverStateClass);
+    var macChallengeClass = node.type === "pc" && macControlsEnabled() ? " is-mac-challenge" : "";
+    var macStateClass = macChallengeClass ? (NetLab.MacAddress.sanitize(node.macAddress) ? " has-mac-address" : " needs-mac-address") : "";
+    var item = element("div", "network-node network-node--" + node.type + (connected ? " is-connected" : "") + (noInternet ? " is-no-internet" : "") + cardStateClass + popoverStateClass + macChallengeClass + macStateClass);
     item.dataset.id = node.id;
     item.dataset.type = node.type;
     item.style.left = node.x + "px";
@@ -371,7 +439,10 @@
       ? { city: NetLab.NetworkScope.sanitizeCity(node.city), cityName: NetLab.NetworkScope.cityName(NetLab.NetworkScope.sanitizeCity(node.city)) }
       : NetLab.NetworkScope.getDeviceLocation(node.id);
     var locationText = location.city ? ", localização " + location.cityName : "";
-    item.setAttribute("aria-label", node.name + ", " + accessibilityState + locationText);
+    var macText = node.type === "pc" && macControlsEnabled()
+      ? ", " + (NetLab.MacAddress.sanitize(node.macAddress) || "MAC não configurado")
+      : "";
+    item.setAttribute("aria-label", node.name + ", " + accessibilityState + macText + locationText);
     if (location.city && node.type !== "router") item.title = "Localização: " + location.cityName + " · Herdada de: " + location.routerName;
 
     var image = element("img", "node-image");
@@ -387,6 +458,13 @@
     item.appendChild(image);
     item.appendChild(label);
     item.appendChild(state);
+    if (node.type === "pc" && macControlsEnabled()) {
+      var visibleMac = NetLab.MacAddress.sanitize(node.macAddress);
+      var macAddress = element("span", "node-mac-address" + (visibleMac ? " is-configured" : ""));
+      macAddress.textContent = visibleMac || "MAC não configurado";
+      macAddress.title = visibleMac || "Abra a placa de rede e gere um endereço MAC";
+      item.appendChild(macAddress);
+    }
     if (node.type === "router") {
       var city = element("span", "node-city");
       city.textContent = "📍 " + location.cityName;

@@ -37,7 +37,36 @@
     });
   }
 
+  function macLogicalResult(source, target) {
+    var sourceResult = NetLab.MacAddress.validate(source.macAddress);
+    var targetResult = NetLab.MacAddress.validate(target.macAddress);
+    if (!sourceResult.valid || !targetResult.valid) {
+      var missing = [];
+      if (!sourceResult.valid) missing.push(source.name);
+      if (!targetResult.valid) missing.push(target.name);
+      return {
+        ok: false,
+        title: "MAC não configurado",
+        message: "Abra a placa de rede de " + missing.join(" e ") + " e use Gerar MAC aleatório antes de comunicar."
+      };
+    }
+    if (sourceResult.value === targetResult.value) {
+      return {
+        ok: false,
+        title: "Conflito de endereço MAC",
+        message: source.name + " e " + target.name + " usam " + sourceResult.value + ". Gere um novo MAC para apenas um deles."
+      };
+    }
+    return {
+      ok: true,
+      title: "Quadro entregue!",
+      message: source.name + " (" + sourceResult.value + ") enviou o quadro para " + target.name + " (" + targetResult.value + ")."
+    };
+  }
+
   function logicalResult(source, target, path) {
+    var challenge = NetLab.State && NetLab.State.data ? NetLab.State.data.challenge : "free";
+    if (NetLab.MacAddress && NetLab.MacAddress.isMacChallenge(challenge)) return macLogicalResult(source, target);
     var comparison = NetLab.IPv4.compareNetworks(source.ipv4, target.ipv4);
     if (!comparison.first || !comparison.second) {
       var missing = [];
@@ -105,6 +134,11 @@
     }
     if (!NetLab.Workspace) return;
     var result = logicalResult(source, node, path);
+    if (NetLab.MacAddress && NetLab.MacAddress.isMacChallenge(NetLab.State.data.challenge) && !result.ok) {
+      NetLab.State.setTool("select");
+      notify("error", result.title, result.message);
+      return;
+    }
     NetLab.Workspace.animatePath(path, { variant: result.ok ? "success" : "error" }).then(function () {
       if (result.ok && NetLab.Challenges) NetLab.Challenges.recordCommunicationSuccess(source, node);
       NetLab.State.setTool("select");
@@ -115,5 +149,5 @@
     });
   }
 
-  NetLab.Communication = { start: start, cancel: cancel, handleNode: handleNode, logicalResult: logicalResult };
+  NetLab.Communication = { start: start, cancel: cancel, handleNode: handleNode, logicalResult: logicalResult, macLogicalResult: macLogicalResult };
 }());

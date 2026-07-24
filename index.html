@@ -9,9 +9,9 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="./assets/images/icone-192.png">
   <link rel="apple-touch-icon" href="./assets/images/icone-192.png">
-  <link rel="stylesheet" href="./css/style.css?v=20260723-3">
-  <link rel="stylesheet" href="./css/workspace.css?v=20260723-3">
-  <link rel="stylesheet" href="./css/responsive.css?v=20260723-3">
+  <link rel="stylesheet" href="./css/style.css?v=20260724-4">
+  <link rel="stylesheet" href="./css/workspace.css?v=20260724-4">
+  <link rel="stylesheet" href="./css/responsive.css?v=20260724-4">
 </head>
 <body>
   <a class="skip-link" href="#workspace">Ir para a área de trabalho</a>
@@ -78,7 +78,11 @@
         <button class="tool-button tool-button--packet" type="button" data-action="communicate" aria-label="Testar comunicação" data-tooltip="Testar comunicação"><svg aria-hidden="true"><use href="#i-packet"></use></svg></button>
       </div>
     </nav>
-    <aside id="sidebar" class="sidebar" aria-label="Equipamentos e desafios">
+    <button id="exercise-panel-toggle" class="exercise-launcher" type="button" aria-label="Abrir trilhas de exercícios" aria-controls="exercise-panel" aria-expanded="false" data-tooltip="Abrir trilhas de exercícios">
+      <img src="./assets/icons/book-open.svg" alt="">
+    </button>
+
+    <aside id="sidebar" class="sidebar" aria-label="Equipamentos e desafio atual">
       <div class="sidebar-scroll">
         <section class="side-section" aria-labelledby="equipment-title">
           <div class="section-heading">
@@ -108,43 +112,6 @@
           </div>
         </section>
 
-        <section class="side-section" aria-labelledby="challenge-title">
-          <div class="section-heading">
-            <div><span class="eyebrow">Aprender</span><h2 id="challenge-title">Trilhas de exercícios</h2></div>
-          </div>
-          <div id="learning-modules" class="learning-modules">
-            <article class="learning-module" data-learning-module="basics">
-              <div class="learning-module__head">
-                <div><span class="learning-module__step">Comece aqui</span><strong>Redes básicas</strong></div>
-                <span id="basics-challenge-count" class="count-badge">0/5</span>
-              </div>
-              <p>Do primeiro cabo até uma LAN conectada à Internet.</p>
-              <button class="module-toggle" type="button" data-challenge-module="basics" aria-expanded="false" aria-controls="basics-challenge-list">Abrir exercícios</button>
-              <div id="basics-challenge-list" class="challenge-list" hidden></div>
-            </article>
-
-            <article class="learning-module" data-learning-module="types">
-              <div class="learning-module__head">
-                <div><span class="learning-module__step">Entenda o alcance</span><strong>Tipos de redes</strong></div>
-                <span id="types-challenge-count" class="count-badge">0/5</span>
-              </div>
-              <p>LAN, MAN, WAN e portas físicas de roteadores e switches.</p>
-              <button class="module-toggle" type="button" data-challenge-module="types" aria-expanded="false" aria-controls="types-challenge-list">Abrir exercícios</button>
-              <div id="types-challenge-list" class="challenge-list" hidden></div>
-            </article>
-
-            <article class="learning-module" data-learning-module="topologies">
-              <div class="learning-module__head">
-                <div><span class="learning-module__step">Pratique formas</span><strong>Topologias</strong></div>
-                <span id="topologies-challenge-count" class="count-badge">0/5</span>
-              </div>
-              <p>Estrela, Barramento, Anel, Malha e Árvore.</p>
-              <button class="module-toggle" type="button" data-challenge-module="topologies" aria-expanded="false" aria-controls="topologies-challenge-list">Abrir exercícios</button>
-              <div id="topologies-challenge-list" class="challenge-list" hidden></div>
-            </article>
-          </div>
-        </section>
-
         <section id="active-challenge" class="side-section active-challenge" aria-labelledby="active-challenge-title">
           <div class="section-heading">
             <div><span class="eyebrow">Desafio atual</span><h2 id="active-challenge-title">Modo livre</h2></div>
@@ -168,14 +135,75 @@
             </div>
             <p id="classification-message" class="classification-message" aria-live="polite"></p>
           </div>
+          <div id="mac-destination-quiz" class="classification-quiz" hidden>
+            <strong>Quadro Ethernet</strong>
+            <label id="mac-destination-question" for="mac-destination-answer">Qual MAC deve ser usado como destino?</label>
+            <div class="classification-answer-row">
+              <select id="mac-destination-answer">
+                <option value="">Selecione o destinatário</option>
+              </select>
+              <button id="mac-destination-submit" class="primary-button" type="button">Responder</button>
+            </div>
+            <p id="mac-destination-message" class="classification-message" aria-live="polite"></p>
+          </div>
           <div class="challenge-actions">
             <button id="ask-hint" class="secondary-button" type="button" aria-label="Pedir dica do desafio">Pedir dica</button>
             <button id="restart-challenge" class="secondary-button" type="button" aria-label="Reiniciar desafio">Reiniciar</button>
             <button id="verify-challenge" class="primary-button" type="button" aria-label="Verificar desafio atual">Verificar</button>
           </div>
         </section>
+      </div>
+    </aside>
 
-        <section id="network-analysis" class="side-section network-analysis" aria-labelledby="network-analysis-title" hidden>
+    <aside id="exercise-panel" class="exercise-panel" aria-labelledby="challenge-title" aria-hidden="true" inert>
+      <header class="exercise-panel__header">
+        <div><span class="eyebrow">Aprender</span><h2 id="challenge-title">Trilhas de exercícios</h2></div>
+        <button id="exercise-panel-close" class="icon-button exercise-panel__close" type="button" aria-label="Fechar trilhas de exercícios">
+          <img src="./assets/icons/x.svg" alt="">
+        </button>
+      </header>
+      <div class="exercise-panel__scroll">
+        <section class="exercise-panel__section" aria-label="Módulos de exercícios">
+          <div id="learning-modules" class="learning-modules">
+            <article class="learning-module" data-learning-module="basics">
+              <div class="learning-module__head">
+                <div><span class="learning-module__step">Comece aqui</span><strong>Redes básicas</strong></div>
+                <span id="basics-challenge-count" class="count-badge">0/5</span>
+              </div>
+              <p>Do primeiro cabo até uma LAN conectada à Internet.</p>
+              <button class="module-toggle" type="button" data-challenge-module="basics" aria-haspopup="dialog" aria-expanded="false" aria-controls="basics-challenge-list">Abrir exercícios</button>
+            </article>
+
+            <article class="learning-module" data-learning-module="types">
+              <div class="learning-module__head">
+                <div><span class="learning-module__step">Entenda o alcance</span><strong>Tipos de redes</strong></div>
+                <span id="types-challenge-count" class="count-badge">0/5</span>
+              </div>
+              <p>LAN, MAN, WAN e portas físicas de roteadores e switches.</p>
+              <button class="module-toggle" type="button" data-challenge-module="types" aria-haspopup="dialog" aria-expanded="false" aria-controls="types-challenge-list">Abrir exercícios</button>
+            </article>
+
+            <article class="learning-module" data-learning-module="mac">
+              <div class="learning-module__head">
+                <div><span class="learning-module__step">Identidade local</span><strong>Endereço MAC</strong></div>
+                <span id="mac-challenge-count" class="count-badge">0/3</span>
+              </div>
+              <p>Gere identidades, corrija conflitos e encontre o destinatário.</p>
+              <button class="module-toggle" type="button" data-challenge-module="mac" aria-haspopup="dialog" aria-expanded="false" aria-controls="mac-challenge-list">Abrir exercícios</button>
+            </article>
+
+            <article class="learning-module" data-learning-module="topologies">
+              <div class="learning-module__head">
+                <div><span class="learning-module__step">Pratique formas</span><strong>Topologias</strong></div>
+                <span id="topologies-challenge-count" class="count-badge">0/5</span>
+              </div>
+              <p>Estrela, Barramento, Anel, Malha e Árvore.</p>
+              <button class="module-toggle" type="button" data-challenge-module="topologies" aria-haspopup="dialog" aria-expanded="false" aria-controls="topologies-challenge-list">Abrir exercícios</button>
+            </article>
+          </div>
+        </section>
+
+        <section id="network-analysis" class="exercise-panel__section network-analysis" aria-labelledby="network-analysis-title" hidden>
           <div class="section-heading">
             <div><span class="eyebrow">Leitura automática</span><h2 id="network-analysis-title">Análise da rede</h2></div>
             <span id="network-analysis-summary" class="count-badge">—</span>
@@ -188,33 +216,42 @@
           <p id="network-analysis-warning" class="analysis-warning" hidden></p>
         </section>
 
-        <section class="side-section" aria-labelledby="progress-title">
-          <div class="section-heading">
-            <div><span class="eyebrow">Seu avanço</span><h2 id="progress-title">Progresso</h2></div>
-          </div>
-          <div id="progress-list" class="progress-list"></div>
-        </section>
-
-        <section id="inspector" class="side-section inspector" aria-labelledby="inspector-title" hidden>
-          <div class="section-heading">
-            <div><span class="eyebrow">Selecionado</span><h2 id="inspector-title">Propriedades</h2></div>
-          </div>
-          <label id="rename-label" for="rename-input">Nome do equipamento</label>
-          <div class="rename-row">
-            <input id="rename-input" maxlength="32" autocomplete="off">
-            <button id="rename-save" class="primary-button" type="button" aria-label="Salvar nome do equipamento">Salvar</button>
-          </div>
-          <div id="router-city-row" class="router-city-row" hidden>
-            <label for="router-city">Cidade do roteador</label>
-            <select id="router-city">
-              <option value="maceio">Maceió</option>
-              <option value="arapiraca">Arapiraca</option>
-            </select>
-            <small>Computadores e switches conectados à LAN herdam esta localização.</small>
-          </div>
-          <button id="inspector-delete" class="danger-button" type="button" aria-label="Excluir item selecionado">Excluir selecionado</button>
-        </section>
+        <details class="progress-details">
+          <summary>
+            <span>Ver progresso detalhado</span>
+            <svg aria-hidden="true"><use href="#i-chevron"></use></svg>
+          </summary>
+          <section class="exercise-panel__progress" aria-labelledby="progress-title">
+            <div class="section-heading">
+              <div><span class="eyebrow">Seu avanço</span><h2 id="progress-title">Progresso</h2></div>
+            </div>
+            <div id="progress-list" class="progress-list"></div>
+          </section>
+        </details>
       </div>
+
+      <section id="exercise-module-popup" class="exercise-module-popup" role="dialog" aria-modal="false" aria-labelledby="exercise-module-title" aria-describedby="exercise-module-description" aria-hidden="true" hidden inert>
+        <header class="exercise-module-popup__header">
+          <button id="exercise-module-back" class="primary-button exercise-module-popup__back" type="button">
+            <svg aria-hidden="true"><use href="#i-chevron"></use></svg>
+            <span>Voltar para trilhas</span>
+          </button>
+          <div class="exercise-module-popup__heading">
+            <div>
+              <span id="exercise-module-step" class="learning-module__step">Trilha</span>
+              <h3 id="exercise-module-title">Exercícios</h3>
+            </div>
+            <span id="exercise-module-count" class="count-badge">0/0</span>
+          </div>
+          <p id="exercise-module-description"></p>
+        </header>
+        <div class="exercise-module-popup__scroll">
+          <div id="basics-challenge-list" class="challenge-list challenge-list--popup" hidden></div>
+          <div id="types-challenge-list" class="challenge-list challenge-list--popup" hidden></div>
+          <div id="mac-challenge-list" class="challenge-list challenge-list--popup" hidden></div>
+          <div id="topologies-challenge-list" class="challenge-list challenge-list--popup" hidden></div>
+        </div>
+      </section>
     </aside>
 
     <main class="workspace-shell">
@@ -236,6 +273,25 @@
         <div id="interaction-hint" class="interaction-hint" aria-live="polite">Ferramenta Selecionar ativa</div>
         <div id="network-tip" class="network-tip" role="status" aria-live="polite" hidden>Conecte a Internet ao Roteador para ativar a rede.</div>
       </div>
+      <section id="inspector" class="inspector workspace-inspector" aria-labelledby="inspector-title" hidden>
+        <div class="section-heading">
+          <div><span class="eyebrow">Selecionado</span><h2 id="inspector-title">Propriedades</h2></div>
+        </div>
+        <label id="rename-label" for="rename-input">Nome do equipamento</label>
+        <div class="rename-row">
+          <input id="rename-input" maxlength="32" autocomplete="off">
+          <button id="rename-save" class="primary-button" type="button" aria-label="Salvar nome do equipamento">Salvar</button>
+        </div>
+        <div id="router-city-row" class="router-city-row" hidden>
+          <label for="router-city">Cidade do roteador</label>
+          <select id="router-city">
+            <option value="maceio">Maceió</option>
+            <option value="arapiraca">Arapiraca</option>
+          </select>
+          <small>Computadores e switches conectados à LAN herdam esta localização.</small>
+        </div>
+        <button id="inspector-delete" class="danger-button" type="button" aria-label="Excluir item selecionado">Excluir selecionado</button>
+      </section>
       <footer class="workspace-status" aria-label="Estado da área de trabalho">
         <span id="status-tool"><b>Selecionar</b></span>
         <span id="status-selection">Nenhum item selecionado</span>
@@ -270,22 +326,24 @@
     </section>
   </div>
 
-  <script defer src="./js/state.js?v=20260723-3"></script>
-  <script defer src="./js/history.js?v=20260723-3"></script>
-  <script defer src="./js/ipv4.js?v=20260723-3"></script>
-  <script defer src="./js/port-model.js?v=20260723-3"></script>
-  <script defer src="./js/network-scope.js?v=20260723-3"></script>
-  <script defer src="./js/storage.js?v=20260723-3"></script>
-  <script defer src="./js/devices.js?v=20260723-3"></script>
-  <script defer src="./js/connections.js?v=20260723-3"></script>
-  <script defer src="./js/topology-validator.js?v=20260723-3"></script>
-  <script defer src="./js/network-basics-validator.js?v=20260723-3"></script>
-  <script defer src="./js/network-types-validator.js?v=20260723-3"></script>
-  <script defer src="./js/challenges.js?v=20260723-3"></script>
-  <script defer src="./js/communication-test.js?v=20260723-3"></script>
-  <script defer src="./js/tutorial.js?v=20260723-3"></script>
-  <script defer src="./js/workspace.js?v=20260723-3"></script>
-  <script defer src="./js/app.js?v=20260723-3"></script>
-  <script defer src="./js/pwa.js?v=20260723-3"></script>
+  <script defer src="./js/state.js?v=20260724-4"></script>
+  <script defer src="./js/history.js?v=20260724-3"></script>
+  <script defer src="./js/ipv4.js?v=20260724-3"></script>
+  <script defer src="./js/mac-address.js?v=20260724-1"></script>
+  <script defer src="./js/port-model.js?v=20260724-3"></script>
+  <script defer src="./js/network-scope.js?v=20260724-3"></script>
+  <script defer src="./js/storage.js?v=20260724-4"></script>
+  <script defer src="./js/devices.js?v=20260724-4"></script>
+  <script defer src="./js/connections.js?v=20260724-4"></script>
+  <script defer src="./js/topology-validator.js?v=20260724-3"></script>
+  <script defer src="./js/network-basics-validator.js?v=20260724-3"></script>
+  <script defer src="./js/network-types-validator.js?v=20260724-3"></script>
+  <script defer src="./js/mac-validator.js?v=20260724-1"></script>
+  <script defer src="./js/challenges.js?v=20260724-4"></script>
+  <script defer src="./js/communication-test.js?v=20260724-4"></script>
+  <script defer src="./js/tutorial.js?v=20260724-3"></script>
+  <script defer src="./js/workspace.js?v=20260724-4"></script>
+  <script defer src="./js/app.js?v=20260724-7"></script>
+  <script defer src="./js/pwa.js?v=20260724-3"></script>
 </body>
 </html>

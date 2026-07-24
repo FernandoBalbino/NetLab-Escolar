@@ -15,6 +15,12 @@
       short: "Pratique LAN, MAN, WAN e o uso correto das portas físicas.",
       order: ["types-lan-ports", "types-switch-capacity", "types-wan-access", "types-man-link", "types-complete"]
     },
+    mac: {
+      id: "mac",
+      name: "Endereço MAC",
+      short: "Dê identidade às placas, resolva um conflito e encontre o destino de um quadro.",
+      order: ["mac-identities", "mac-conflict", "mac-destination"]
+    },
     topologies: {
       id: "topologies",
       name: "Topologias",
@@ -118,13 +124,40 @@
       minimum: "Classifique 3 cenários",
       success: "Você reconheceu corretamente LAN, MAN e WAN a partir da estrutura e da localização."
     },
+    "mac-identities": {
+      module: "mac",
+      step: 1,
+      name: "Dê identidade às placas",
+      short: "Gere um endereço MAC diferente para cada computador.",
+      objective: "Os dois computadores já estão ligados, mas suas placas ainda não têm endereço MAC. Abra cada placa, use Gerar MAC aleatório e entregue um quadro com Testar comunicação.",
+      minimum: "2 PCs + 2 MACs",
+      success: "As duas placas receberam identidades únicas e o quadro chegou ao destino."
+    },
+    "mac-conflict": {
+      module: "mac",
+      step: 2,
+      name: "Resolva o conflito",
+      short: "Dois computadores não podem usar o mesmo endereço MAC.",
+      objective: "Os dois computadores começaram com o mesmo MAC. Abra a placa de apenas um deles, gere um endereço diferente e confirme a comunicação.",
+      minimum: "Corrija 1 MAC duplicado",
+      success: "O conflito foi removido e cada placa voltou a ter uma identidade própria."
+    },
+    "mac-destination": {
+      module: "mac",
+      step: 3,
+      name: "Encontre o destinatário",
+      short: "Escolha qual MAC deve aparecer como destino do quadro.",
+      objective: "Observe os dois computadores e selecione o endereço MAC do destinatário indicado no desafio atual.",
+      minimum: "Escolha o MAC correto",
+      success: "Você identificou corretamente o endereço usado para entregar o quadro ao destinatário."
+    },
     star: { module: "topologies", name: "Estrela", short: "Um switch no centro conecta os computadores da LAN.", objective: "Conecte três ou mais PCs ao mesmo switch. Se usar Internet, siga Internet → Roteador → Switch central.", minimum: "1 switch + 3 PCs" },
     bus: { module: "topologies", name: "Barramento", short: "Todos os computadores compartilham uma linha principal.", objective: "Adicione um barramento e ligue pelo menos três computadores aos seus pontos.", minimum: "1 barramento + 3 PCs" },
     ring: { module: "topologies", name: "Anel", short: "Cada equipamento possui exatamente dois vizinhos.", objective: "Feche um ciclo com pelo menos três equipamentos. Neste desafio, computadores podem ser ligados diretamente.", minimum: "3 equipamentos" },
     mesh: { module: "topologies", name: "Malha", short: "Cada equipamento se conecta diretamente a todos os outros.", objective: "Ligue diretamente cada equipamento a todos os demais. Computadores podem ser conectados entre si.", minimum: "4 equipamentos + 6 cabos" },
     tree: { module: "topologies", name: "Árvore", short: "Switches organizam a rede em níveis e ramificações.", objective: "Crie um switch raiz, switches secundários e computadores nas pontas, sem ciclos.", minimum: "2 switches + 2 PCs" }
   };
-  var order = modules.basics.order.concat(modules.types.order, modules.topologies.order);
+  var order = modules.basics.order.concat(modules.types.order, modules.mac.order, modules.topologies.order);
 
   function get(id) { return definitions[id] || null; }
   function list(moduleId) {
@@ -132,7 +165,7 @@
     return ids.map(function (id) { return Object.assign({ id: id }, definitions[id]); });
   }
   function listModules() {
-    return [modules.basics, modules.types, modules.topologies].map(function (module) {
+    return [modules.basics, modules.types, modules.mac, modules.topologies].map(function (module) {
       return { id: module.id, name: module.name, short: module.short, order: module.order.slice() };
     });
   }
@@ -152,8 +185,9 @@
     NetLab.State.data.tool = "select";
   }
 
-  function seedNode(id, type, name, x, y, city) {
+  function seedNode(id, type, name, x, y, city, macAddress) {
     var dimensions = { pc: [142, 158], switch: [154, 124], router: [170, 148], internet: [142, 130] }[type];
+    var macExercisePc = type === "pc" && NetLab.MacAddress && NetLab.MacAddress.isMacChallenge(NetLab.State.data.challenge);
     return {
       id: id,
       type: type,
@@ -161,11 +195,12 @@
       x: x,
       y: y,
       width: dimensions[0],
-      height: dimensions[1],
+      height: macExercisePc ? 174 : dimensions[1],
       status: "disconnected",
       hasNetworkCard: type === "pc" ? true : undefined,
       city: type === "router" ? NetLab.NetworkScope.sanitizeCity(city) : undefined,
-      ipv4: type === "pc" ? { address: "", mask: "", gateway: "" } : undefined
+      ipv4: type === "pc" ? { address: "", mask: "", gateway: "" } : undefined,
+      macAddress: type === "pc" ? (NetLab.MacAddress ? NetLab.MacAddress.sanitize(macAddress) : "") : undefined
     };
   }
 
@@ -207,6 +242,16 @@
     };
   }
 
+  function macSeed(firstMac, secondMac) {
+    return {
+      nodes: [
+        seedNode("mac-pc-a", "pc", "PC de origem", 620, 420, null, firstMac),
+        seedNode("mac-pc-b", "pc", "PC de destino", 1080, 420, null, secondMac)
+      ],
+      connections: [seedCable("mac-direct-link", "mac-pc-a", "mac-pc-b")]
+    };
+  }
+
   function installSeed(seed) {
     NetLab.State.data.nodes = seed.nodes;
     NetLab.State.data.connections = seed.connections;
@@ -218,6 +263,12 @@
     if (id === "types-complete") {
       NetLab.State.data.challengeData = { quizScenario: 0, quizComplete: false, lastAnswer: null };
       installSeed(quizSeed(0));
+    }
+    if (id === "mac-identities") installSeed(macSeed("", ""));
+    if (id === "mac-conflict") installSeed(macSeed("02:10:20:30:40:50", "02:10:20:30:40:50"));
+    if (id === "mac-destination") {
+      NetLab.State.data.challengeData = { macSourceId: "mac-pc-a", macTargetId: "mac-pc-b", macQuizComplete: false, lastAnswer: null };
+      installSeed(macSeed("02:10:20:30:40:51", "02:10:20:30:40:52"));
     }
   }
 
@@ -248,6 +299,7 @@
       return NetLab.NetworkBasicsValidator.validate(id, snapshot, NetLab.State.data.communicationProof);
     }
     if (definition.module === "types") return NetLab.NetworkTypesValidator.validate(id, snapshot);
+    if (definition.module === "mac") return NetLab.MacValidator.validate(id, snapshot, NetLab.State.data.communicationProof, NetLab.State.data.challengeData);
     return NetLab.TopologyValidator.validate(id, snapshot);
   }
 
@@ -289,12 +341,15 @@
 
   function recordCommunicationSuccess(source, target) {
     var id = NetLab.State.data.challenge;
-    if (!definitions[id] || definitions[id].module !== "basics") return false;
+    if (!definitions[id] || ["basics", "mac"].indexOf(definitions[id].module) < 0) return false;
+    var signature = definitions[id].module === "mac"
+      ? NetLab.MacValidator.signature(NetLab.State.captureProject())
+      : NetLab.NetworkBasicsValidator.signature(NetLab.State.captureProject());
     NetLab.State.data.communicationProof = {
       challengeId: id,
       sourceId: source.id,
       targetId: target.id,
-      signature: NetLab.NetworkBasicsValidator.signature(NetLab.State.captureProject())
+      signature: signature
     };
     NetLab.State.emit("communication-success");
     return true;
@@ -323,6 +378,24 @@
     return { correct: true, complete: true, message: "Os três cenários foram classificados corretamente. Clique em Verificar para concluir." };
   }
 
+  function submitMacDestinationAnswer(answer) {
+    if (NetLab.State.data.challenge !== "mac-destination" || !NetLab.State.data.challengeData) {
+      return { correct: false, complete: false, message: "Inicie o exercício Encontre o destinatário." };
+    }
+    var data = NetLab.State.data.challengeData;
+    var target = NetLab.State.getNode(data.macTargetId);
+    var expected = target ? NetLab.MacAddress.sanitize(target.macAddress) : "";
+    var selected = NetLab.MacAddress.sanitize(answer);
+    data.lastAnswer = selected;
+    if (!selected || selected !== expected) {
+      NetLab.State.emit("mac-destination-answer");
+      return { correct: false, complete: false, message: "O campo de destino deve usar o MAC do computador que receberá o quadro." };
+    }
+    data.macQuizComplete = true;
+    NetLab.State.emit("mac-destination-answer");
+    return { correct: true, complete: true, message: "Correto! Esse é o endereço MAC do computador de destino. Clique em Verificar para concluir." };
+  }
+
   NetLab.Challenges = {
     order: order,
     modules: listModules,
@@ -336,6 +409,7 @@
     validateCurrent: validateCurrent,
     askHint: askHint,
     submitClassificationAnswer: submitClassificationAnswer,
+    submitMacDestinationAnswer: submitMacDestinationAnswer,
     recordCommunicationSuccess: recordCommunicationSuccess
   };
 }());

@@ -5,6 +5,7 @@
   "./js/state.js",
   "./js/history.js",
   "./js/ipv4.js",
+  "./js/mac-address.js",
   "./js/port-model.js",
   "./js/network-scope.js",
   "./js/storage.js",
@@ -13,6 +14,7 @@
   "./js/topology-validator.js",
   "./js/network-basics-validator.js",
   "./js/network-types-validator.js",
+  "./js/mac-validator.js",
   "./js/challenges.js",
   "./js/communication-test.js",
   "./js/tutorial.js",
@@ -25,6 +27,8 @@
   "./assets/images/pc.png",
   "./assets/images/placa-de-rede.png",
   "./assets/images/porta-rj45.png",
+  "./assets/icons/book-open.svg",
+  "./assets/icons/x.svg",
   "./assets/images/icone-192.png",
   "./assets/images/icone-512.png"
 ]
